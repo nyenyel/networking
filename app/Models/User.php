@@ -4,7 +4,9 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\User\InvitedUser;
 use App\Models\User\StoreInfo;
+use App\Models\User\Transaction;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -58,4 +60,25 @@ class User extends Authenticatable
     {
         return $this->hasOne(StoreInfo::class, 'user_id');
     }
+
+    public function store_referrer() {
+        return $this->hasMany(StoreInfo::class, 'user_id');
+    }
+
+    public function store_invitee() {
+        return $this->hasMany(StoreInfo::class, 'invited_by');
+    }
+
+    public function transactions() {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function user_referrer() {
+        return $this->hasMany(InvitedUser::class, 'user_id');
+    }
+
+    public function user_invitee() {
+        return $this->hasMany(InvitedUser::class, 'invited_user');
+    }
+
 }
