@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\InviteUserRequest;
+use App\Models\User;
+use App\Models\User\StoreInfo;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
-class InviteController extends Controller
+class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -61,5 +65,31 @@ class InviteController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function AddUser(InviteUserRequest $request)
+    {
+        $valid_req = $request->validated();
+
+        $valid_req['password'] = bcrypt($valid_req['password']);
+
+        $user = User::create($valid_req);
+
+        $defaultStoreInfo = [
+            'user_id' => $user->id,
+            // 'invited_by' => Auth::user()->id,
+            'invited_by' => 1, //for API TESTING ONLY
+            'points' => 0,
+            'unpaid' => 1,
+            'status' => 0,
+        ];
+
+        $store_info = StoreInfo::create($defaultStoreInfo);
+
+        return response()->json([
+            'message'=>'success',
+            'user' => $user,
+            'default_store_info' => $store_info
+        ]);
     }
 }
