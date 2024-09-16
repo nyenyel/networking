@@ -14,7 +14,9 @@ class StoreInfo extends Model
         'user_id',
         'invited_by',
         'points',
+        'unpaid',
         'status',
+        'invited_users_count',
     ];
 
     public function user()

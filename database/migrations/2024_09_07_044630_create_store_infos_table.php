@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id');
             $table->foreignId('invited_by');
-            $table->float('points');
-            $table->boolean('unpaid')->default(1); //unpaid on default (new account)
-            $table->boolean('status');
+            $table->float('points')->default(0);
+            $table->boolean('unpaid')->default(1);
+            $table->boolean('status')->default(0);
+            $table->integer('invited_users_count')->default(0); // Add this column
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users');
