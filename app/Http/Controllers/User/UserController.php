@@ -76,7 +76,7 @@ class UserController extends Controller
         $user = User::create($valid_req);
 
         // Get the ID of the user who is inviting (use Auth::user()->id in real scenario)
-        $invitedById = 22; // for API testing, replace with the actual inviter's user ID
+        $invitedById = 1; // for API testing, replace with the actual inviter's user ID
 
         $defaultStoreInfo = [
             'user_id' => $user->id,
