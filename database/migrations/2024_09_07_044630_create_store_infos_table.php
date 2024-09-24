@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('store_infos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
-            $table->foreignId('invited_by');
+            $table->foreignId('invited_by')->nullable();
             $table->float('points')->default(0);
             $table->boolean('unpaid')->default(1);
             $table->boolean('status')->default(0);
