@@ -43,11 +43,11 @@ export default function GenealogyOutlet() {
     ];
       
       const initialEdges = [
-        { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
-        { id: 'e1-3', source: '1', target: '3', type: 'smoothstep' },
-        { id: 'e2-4', source: '2', target: '4', type: 'smoothstep' },
-        { id: 'e2-5', source: '2', target: '5', type: 'smoothstep' },
-        { id: 'e3-6', source: '3', target: '6', type: 'smoothstep' }
+        { id: 'e1-2', source: '1', target: '2', type: 'bezier' },
+        { id: 'e1-3', source: '1', target: '3', type: 'bezier' },
+        { id: 'e2-4', source: '2', target: '4', type: 'bezier' },
+        { id: 'e2-5', source: '2', target: '5', type: 'bezier' },
+        { id: 'e3-6', source: '3', target: '6', type: 'bezier' }
       ];
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
