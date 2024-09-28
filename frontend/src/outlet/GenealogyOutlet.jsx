@@ -4,13 +4,43 @@ import 'reactflow/dist/style.css';
 
 export default function GenealogyOutlet() {
     const initialNodes = [
-        { id: '1', position: { x: 300, y: 50 }, data: { label: 'Top Node' } }, // Top node
-        { id: '2', position: { x: 150, y: 150 }, data: { label: 'Level 2 - Node 1' } }, // Level 2
-        { id: '3', position: { x: 450, y: 150 }, data: { label: 'Level 2 - Node 2' } },
-        { id: '4', position: { x: 50, y: 250 }, data: { label: 'Level 3 - Node 1' } }, // Level 3
-        { id: '5', position: { x: 300, y: 250 }, data: { label: 'Level 3 - Node 2' } },
-        { id: '6', position: { x: 550, y: 250 }, data: { label: 'Level 3 - Node 3' } }
-      ];
+        {
+          id: '1',
+          position: { x: 300, y: 50 },
+          data: { label: 'Top Node' },
+          style: { backgroundColor: '#FF5722', color: 'white', border: '2px solid #FF9800' }, // Custom color
+        },
+        {
+          id: '2',
+          position: { x: 150, y: 150 },
+          data: { label: 'Level 2 - Node 1' },
+          style: { backgroundColor: '#03A9F4', color: 'white' }, // Custom color
+        },
+        {
+          id: '3',
+          position: { x: 450, y: 150 },
+          data: { label: 'Level 2 - Node 2' },
+          style: { backgroundColor: '#8BC34A', color: 'black' }, // Custom color
+        },
+        {
+          id: '4',
+          position: { x: 50, y: 250 },
+          data: { label: 'Level 3 - Node 1' },
+          style: { backgroundColor: '#FFC107', color: 'black' }, // Custom color
+        },
+        {
+          id: '5',
+          position: { x: 300, y: 250 },
+          data: { label: 'Level 3 - Node 2' },
+          style: { backgroundColor: '#9C27B0', color: 'white' }, // Custom color
+        },
+        {
+          id: '6',
+          position: { x: 550, y: 250 },
+          data: { label: 'Level 3 - Node 3' },
+          style: { backgroundColor: '#607D8B', color: 'white' }, // Custom color
+        },
+    ];
       
       const initialEdges = [
         { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
