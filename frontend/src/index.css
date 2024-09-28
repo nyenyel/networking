@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'pf';
+  src: url('./assets/font/pf.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'sf';
+  src: url('./assets/font/sf-refular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'sf-bold';
+  src: url('./assets/font/sf-bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'sf-extrabold';
+  src: url('./assets/font/sf-extrabold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'sf-light';
+  src: url('./assets/font/sf-ligght.ttf') format('truetype');
+}
+
