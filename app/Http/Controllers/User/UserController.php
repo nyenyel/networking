@@ -162,4 +162,62 @@ class UserController extends Controller
             }
         }
     }
+
+    // Method to get the genealogy (both ancestors and descendants)
+    public function getGenealogy($userId)
+    {
+        $user = User::findOrFail($userId);
+
+        // Get ancestors (all users who invited the current user)
+        $ancestors = $this->getAncestors($user);
+
+        // Get descendants (all users invited by the current user and their invitees)
+        $descendants = $this->getDescendants($user);
+
+        return response()->json([
+            'user' => $user,
+            'ancestors' => $ancestors,
+            'descendants' => $descendants,
+        ]);
+    }
+
+    // Recursive function to get all ancestors (users who invited the user)
+    protected function getAncestors($user)
+    {
+        $ancestors = [];
+        $currentUser = $user;
+
+        while ($currentUser->storeInfo && $currentUser->storeInfo->invited_by) {
+            $inviter = User::find($currentUser->storeInfo->invited_by);
+            if ($inviter) {
+                $ancestors[] = $inviter;
+                $currentUser = $inviter;
+            } else {
+                break;
+            }
+        }
+
+        return $ancestors;
+    }
+
+    // Recursive function to get all descendants (users invited by this user and their invitees)
+    protected function getDescendants($user)
+    {
+        $descendants = [];
+
+        $invitedUsers = InvitedUser::where('user_id', $user->id)->get();
+
+        foreach ($invitedUsers as $invitedUser) {
+            $invited = User::find($invitedUser->invited_user);
+            if ($invited) {
+                $descendants[] = $invited;
+
+                // Recursively get invitees of the invited user
+                $childDescendants = $this->getDescendants($invited);
+                $descendants = array_merge($descendants, $childDescendants);
+            }
+        }
+
+        return $descendants;
+    }
 }
