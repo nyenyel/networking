@@ -5,10 +5,12 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\InviteUserRequest;
 use App\Models\User;
+use App\Models\User\InvitationCode;
 use App\Models\User\InvitedUser;
 use App\Models\User\StoreInfo;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Str;
 
 class UserController extends Controller
 {
@@ -70,14 +72,34 @@ class UserController extends Controller
 
     public function AddUser(InviteUserRequest $request)
     {
+        // Validate the request data
         $valid_req = $request->validated();
         $valid_req['password'] = bcrypt($valid_req['password']);
 
+        // Check if an invitation code was provided
+        if (isset($valid_req['invitation_code'])) {
+            // Validate the invitation code
+            $invitationCode = InvitationCode::where('code', $valid_req['invitation_code'])->first();
+
+            if (!$invitationCode) {
+                return response()->json(['message' => 'Invalid invitation code'], 400);
+            }
+
+            // Check if the code has been used more than twice
+            if ($invitationCode->used_count >= 2) {
+                return response()->json(['message' => 'Invitation code has already been used 2 times'], 400);
+            }
+
+            // Get the inviter's user ID from the invitation code
+            $invitedById = $invitationCode->user_id;
+        } else {
+            return response()->json(['message' => 'Invitation code is required'], 400);
+        }
+
+        // Create the new user
         $user = User::create($valid_req);
 
-        // Get the ID of the user who is inviting (use Auth::user()->id in real scenario)
-        $invitedById = 3; // for API testing, replace with the actual inviter's user ID
-
+        // Set default store information for the new user
         $defaultStoreInfo = [
             'user_id' => $user->id,
             'invited_by' => $invitedById,
@@ -85,30 +107,63 @@ class UserController extends Controller
             'points_limit' => 0,
             'unpaid' => 1,
             'status' => 0,
+            'invitation_code' => $valid_req['invitation_code'], // Save inviter's invitation code here
         ];
 
+        // Create store info for the new user
         $store_info = StoreInfo::create($defaultStoreInfo);
 
-        // record the invitation
-        $this->recordInvitation($invitedById, $user->id);
+        // Record the invitation (link inviter and invitee using the inviter's user ID)
+        $this->recordInvitation($valid_req['invitation_code'], $user->id);
 
-        // update inviter's store info
+        // Update inviter's store info (you can still use inviter's user_id)
         $this->updateInviterStoreInfo($invitedById);
 
+        // Increment the used count for the invitation code
+        $invitationCode->increment('used_count');
+
+        // Generate and save the unique invitation code for the new user
+        $newInvitationCode = $this->generateInvitationCodeForUser($user->id);
+
         return response()->json([
-            'message' => 'success',
+            'message' => 'User created successfully',
             'user' => $user,
-            'default_store_info' => $store_info
+            'default_store_info' => $store_info,
+            'invitation_code' => $newInvitationCode // Return the newly created invitation code
         ]);
     }
 
-    protected function recordInvitation($invitedById, $newUserId)
+    protected function generateInvitationCodeForUser($userId)
     {
-        // record  invitation in the invited_users table
-        InvitedUser::create([
-            'user_id' => $invitedById,
-            'invited_user' => $newUserId,
+        // Generate a unique random string as the invitation code
+        $code = Str::random(20);
+
+        // Store the code with the user's ID in the invitation_codes table
+        $invitationCode = InvitationCode::create([
+            'user_id' => $userId,
+            'code' => $code,
+            'used_count' => 0, // Initialize used count to 0
         ]);
+
+        return $code; // Return the generated code
+    }
+
+
+    protected function recordInvitation($invitationCode, $newUserId)
+    {
+        // Get the inviter's user_id using the provided invitation code
+        $inviter = InvitationCode::where('code', $invitationCode)->first();
+
+        if ($inviter) {
+            // Record the invitation using the inviter's user_id (not the code)
+            InvitedUser::create([
+                'user_id' => $inviter->user_id, // The actual user_id of the inviter
+                'invited_user' => $newUserId,
+            ]);
+        } else {
+            // Handle the case where the inviter is not found
+            throw new \Exception('Invalid invitation code.');
+        }
     }
 
     protected function updateInviterStoreInfo($invitedById)
