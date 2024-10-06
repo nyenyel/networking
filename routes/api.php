@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\User\InviteController;
 use App\Http\Controllers\User\PointsController;
 use App\Http\Controllers\User\UserController;
@@ -17,3 +18,5 @@ Route::middleware('auth:sanctum')->group(function () {
 //API for testing
 Route::post('/test-invite-user', [UserController::class, 'AddUser']);
 Route::post('/redeem-points', [PointsController::class, 'redeemPoints']);
+
+Route::get('/admin/dashboard', [AdminController::class, 'showDashboard']);
