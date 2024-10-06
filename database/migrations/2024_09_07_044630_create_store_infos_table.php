@@ -16,7 +16,9 @@ return new class extends Migration
             $table->foreignId('user_id');
             $table->foreignId('invited_by')->nullable();
             $table->float('points')->default(0);
+            $table->float('points_limit')->default(0); //non changing limit
             $table->boolean('unpaid')->default(1);
+            $table->date('last_redeemed')->nullable();
             $table->boolean('status')->default(0);
             $table->integer('invited_users_count')->default(0); // Add this column
             $table->timestamps();

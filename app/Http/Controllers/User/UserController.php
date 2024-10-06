@@ -82,6 +82,7 @@ class UserController extends Controller
             'user_id' => $user->id,
             'invited_by' => $invitedById,
             'points' => 0,
+            'points_limit' => 0,
             'unpaid' => 1,
             'status' => 0,
         ];
@@ -144,9 +145,10 @@ class UserController extends Controller
                 if ($parentStoreInfo) {
                     // pass points to the parent store
                     $parentStoreInfo->points += 10;
+                    $parentStoreInfo->points_limit += 10;
                     $parentStoreInfo->save();
 
-                    if($parentStoreInfo->points >= 5000){
+                    if($parentStoreInfo->points_limit >= 5000){
                         $parentStoreInfo->status = 3; //graduate
                         $parentStoreInfo->save();
 
