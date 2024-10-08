@@ -29,7 +29,7 @@ class InviteUserRequest extends FormRequest
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'photo_id' => 'nullable|string|max:255',
-            'invitation_code' => 'required'
+            'invitation_code' => 'nullable|string|max:255'
         ];
     }
 }

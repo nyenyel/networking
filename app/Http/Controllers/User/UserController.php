@@ -76,6 +76,9 @@ class UserController extends Controller
         $valid_req = $request->validated();
         $valid_req['password'] = bcrypt($valid_req['password']);
 
+        // Initialize $invitedById as null in case there's no invitation code
+        $invitedById = null;
+
         // Check if an invitation code was provided
         if (isset($valid_req['invitation_code'])) {
             // Validate the invitation code
@@ -92,8 +95,9 @@ class UserController extends Controller
 
             // Get the inviter's user ID from the invitation code
             $invitedById = $invitationCode->user_id;
-        } else {
-            return response()->json(['message' => 'Invitation code is required'], 400);
+
+            // Increment the used count for the invitation code
+            $invitationCode->increment('used_count');
         }
 
         // Create the new user
@@ -102,25 +106,25 @@ class UserController extends Controller
         // Set default store information for the new user
         $defaultStoreInfo = [
             'user_id' => $user->id,
-            'invited_by' => $invitedById,
+            'invited_by' => $invitedById, // Could be null if no invitation code was provided
             'points' => 0,
             'points_limit' => 0,
             'unpaid' => 1,
             'status' => 0,
-            'invitation_code' => $valid_req['invitation_code'], // Save inviter's invitation code here
+            'invitation_code' => $valid_req['invitation_code'] ?? null, // Save inviter's invitation code if available
         ];
 
         // Create store info for the new user
         $store_info = StoreInfo::create($defaultStoreInfo);
 
-        // Record the invitation (link inviter and invitee using the inviter's user ID)
-        $this->recordInvitation($valid_req['invitation_code'], $user->id);
+        // If an invitation code was provided, record the invitation and update inviter's info
+        if ($invitedById) {
+            // Record the invitation (link inviter and invitee using the inviter's user ID)
+            $this->recordInvitation($valid_req['invitation_code'], $user->id);
 
-        // Update inviter's store info (you can still use inviter's user_id)
-        $this->updateInviterStoreInfo($invitedById);
-
-        // Increment the used count for the invitation code
-        $invitationCode->increment('used_count');
+            // Update inviter's store info
+            $this->updateInviterStoreInfo($invitedById);
+        }
 
         // Generate and save the unique invitation code for the new user
         $newInvitationCode = $this->generateInvitationCodeForUser($user->id);
