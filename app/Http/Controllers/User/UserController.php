@@ -136,7 +136,7 @@ class UserController extends Controller
     protected function generateInvitationCodeForUser($userId)
     {
         // Generate a unique random string as the invitation code
-        $code = Str::random(20);
+        $code = Str::random(10);
 
         // Store the code with the user's ID in the invitation_codes table
         $invitationCode = InvitationCode::create([
