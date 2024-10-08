@@ -13,8 +13,8 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::prefix('auth')->group(function () {
-    Route::post('login', [AuthController::class, 'AddUser']);
-    Route::post('logout', [AuthController::class, 'AddUser']);
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');;
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -24,5 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
 //API for testing
 Route::post('/test-invite-user', [UserController::class, 'AddUser']);
 Route::post('/redeem-points', [PointsController::class, 'redeemPoints']);
+Route::get('user/genealogy/{id}', [UserController::class, 'getGenealogy']);
+
 
 Route::get('/admin/dashboard', [AdminController::class, 'showDashboard']);

@@ -13,6 +13,7 @@ class StoreInfo extends Model
     protected $fillable = [
         'user_id',
         'invited_by',
+        'invitation_code',
         'points',
         'unpaid',
         'status',

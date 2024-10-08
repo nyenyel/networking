@@ -12,6 +12,7 @@ class LoginService {
         if(!$user || !Hash::check($data['password'], $user->password)){
             return response()->json(['message' => 'Invalid Credential']);
         }
+        
         $token = $user->createToken('auth_token')->plainTextToken;
         return response()->json([
             'user' => UserResource::make($user),
