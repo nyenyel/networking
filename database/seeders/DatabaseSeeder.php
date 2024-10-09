@@ -16,8 +16,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+
+        $this->call([
+            LibTransactionSeeder::class
+        ]);
+
         // Create users and store info for each
-        User::factory(1)->create()->each(function ($user) {
+        User::factory(5)->create()->each(function ($user) {
             // Create store info for the new user
             $storeInfo = StoreInfo::factory()->create([
                 'user_id' => $user->id,
