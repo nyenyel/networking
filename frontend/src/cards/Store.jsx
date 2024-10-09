@@ -2,32 +2,32 @@ import React from 'react'
 import suki from '../assets/suki.png'
 
 
-export default function Store() {
+export default function Store({data}) {
     return (
         <>
         <div className='flex font-sf bg-white mb-2 p-4 drop-shadow rounded-md'>
             <div className="flex-none text-center mr-2">
                 <img src={suki} alt="suki" className="w-auto h-24 mx-auto" /> {/* Centers the image horizontally */}
-                <div className="bg-trc rounded text-white px-2">STORE ID: 0001</div>
+                <div className="bg-trc rounded text-white px-2">STORE ID: {data?.user.store_info.id}</div>
             </div>
             <div className='flex-1 flex text-center'>
                 <div className='flex-1 border-r-2 text-white' >
                     <div className='bg-trc mx-4 rounded-md py-1'>
-                        DAILY POINTS
+                        AVG. DAILY POINTS
                     </div>
                     <div className='text-text text-opacity-50 flex text-center py-4 text-5xl'>
                         <div className='flex-1'/>
-                        10,000 <div className='text-base ml-2'>pts</div>
+                        {data?.points.daily} <div className='text-base ml-2'>pts</div>
                         <div className='flex-1'/>
                     </div>
                 </div>
                 <div className='flex-1 border-r-2 text-white' >
                     <div className='bg-trc mx-4 rounded-md py-1'>
-                        TOTAL POINTS
+                        CURRENT POINTS
                     </div>
                     <div className='text-text text-opacity-50 flex text-center py-4 text-5xl'>
                         <div className='flex-1'/>
-                        70,000 <div className='text-base ml-2'>pts</div>
+                        {data?.user.store_info.points} <div className='text-base ml-2'>pts</div>
                         <div className='flex-1'/>
                     </div>
                 </div>
@@ -37,11 +37,10 @@ export default function Store() {
                     </div>
                     <div className='text-text text-opacity-50 flex text-center py-4 text-4xl'>
                         <div className='flex-1'/>
-                        OPEN STORE 
+                        {data?.points.status}
                         <div className='flex-1'/>
                     </div>
                 </div>
-
             </div>
         </div>
         </>

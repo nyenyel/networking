@@ -1,10 +1,21 @@
 import React, { useContext } from 'react'
 import Logo from './Logo'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
+import LoginRedirect from '../context/LoginRedirect'
 
 export default function TopBar({link}) {
-    const {token} = useContext(AppContext)
+    const {token, apiClient} = useContext(AppContext)
+    const navigate = useNavigate()
+    const handleLogout = async () =>{
+        try{
+            const response = await apiClient.post('api/auth/logout',{})
+            localStorage.removeItem('token')
+            navigate(0)
+        } catch(e) {
+            console.error(e.response)
+        }
+    }
     return (
         <>
         <div className=' bg-trc flex text-white font-sf'>
@@ -19,7 +30,7 @@ export default function TopBar({link}) {
             ))}
             <div className='flex-1'></div>
             {token ? (
-                <div className='content-center m-4 bg-src px-10 rounded-lg hover:scale-105 cursor-pointer '>LOGOUT</div>
+                <div className='content-center m-4 bg-src px-10 rounded-lg hover:scale-105 cursor-pointer ' onClick={handleLogout}>LOGOUT</div>
             ) :(
                 <NavLink to={'login'} className='content-center m-4 bg-src px-10 rounded-lg'>LOGIN</NavLink>
             )}
