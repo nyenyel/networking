@@ -13,8 +13,10 @@ class InvitedUserResource extends JsonResource
         return [
             'id' => $this->invited_user,
             'user' => new UserResource($this->whenLoaded('invited')),
+            'store' => new StoreInfoResource($this->whenLoaded('storeInfo')),
             // Eager load the invited users
             'invited_users' => InvitedUserResource::collection($this->whenLoaded('invited.user_invitee')),
+            
         ];
     }
 }

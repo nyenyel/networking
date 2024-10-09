@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\User\InvitationCode;
 use App\Models\User\InvitedUser;
 use App\Models\User\StoreInfo;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -228,20 +229,41 @@ class UserController extends Controller
     public function getGenealogy($userId)
     {
         $user = User::findOrFail($userId);
-
+        $user->load(['inviteCode']);
         // Get ancestors (all users who invited the current user)
         $ancestors = $this->getAncestors($user);
 
         // Get descendants (all users invited by the current user and their invitees)
         $descendants = $this->getDescendants($user);
 
+        $avgPoints = $this->avgPoints($user->storeInfo);
+
         return response()->json([
             'user' => $user,
+            'points' => $avgPoints,
             'ancestors' => $ancestors,
             'descendants' => $descendants,
         ]);
     }
+    public function avgPoints(StoreInfo $store){
+        $startDate = $store->created_at;
+        $currentDate = Carbon::now();
 
+        $hoursDifference = $startDate->diffInHours($currentDate);
+        $daysDifference = round($hoursDifference / 24);
+
+        if ($daysDifference == 0) {
+            $daysDifference = 1;
+        }
+
+        $daily = $store->points/$daysDifference;
+        $weekly = $daily * min($daysDifference, 7);
+    
+        return [
+            'daily' => $daily,
+            'weekly' => $weekly
+        ];
+    }
     // Recursive function to get all ancestors (users who invited the user)
     protected function getAncestors($user)
     {
@@ -266,18 +288,35 @@ class UserController extends Controller
     {
         $descendants = [];
 
-        $invitedUsers = InvitedUser::where('user_id', $user->id)->get();
+        // $invitedUsers = InvitedUser::where('user_id', $user->id)->with(['invited.storeInfo'])->get();
 
+        // foreach ($invitedUsers as $invitedUser) {
+        //     $invited = User::find($invitedUser->invited_user);
+        //     if ($invited) {
+        //         $descendants[] = $invited;
+
+        //         // Recursively get invitees of the invited user
+        //         $childDescendants = $this->getDescendants($invited);
+        //         $descendants = array_merge($descendants, $childDescendants);
+        //     }
+        // }
+
+        $invitedUsers = InvitedUser::where('user_id', $user->id)
+                        ->with(['invited.storeInfo']) 
+                        ->get();
+        
         foreach ($invitedUsers as $invitedUser) {
-            $invited = User::find($invitedUser->invited_user);
+            // Since 'invited' is eager loaded, use it directly from $invitedUser
+            $invited = $invitedUser->invited; //storeInfo loaded
             if ($invited) {
-                $descendants[] = $invited;
-
+                $descendants[] = $invited; 
+    
                 // Recursively get invitees of the invited user
                 $childDescendants = $this->getDescendants($invited);
                 $descendants = array_merge($descendants, $childDescendants);
             }
         }
+        
 
         return $descendants;
     }
@@ -287,7 +326,6 @@ class UserController extends Controller
     try {
         // Eager load user_invitee and their invited users
         $user = User::with(['user_invitee.invited.user_invitee.invited'])->findOrFail($id);
-
         // Return a JsonResponse with the UserResource wrapped in it
         return response()->json(new UserResource($user));
     } catch (ModelNotFoundException $e) {

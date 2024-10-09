@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Models\User\InvitationCode;
 use App\Models\User\InvitedUser;
 use App\Models\User\StoreInfo;
 use App\Models\User\Transaction;
@@ -79,11 +80,12 @@ class User extends Authenticatable
     }
 
     public function user_invitee()
-{
-    return $this->hasMany(InvitedUser::class, 'user_id')
-                ->with('invited.user_invitee'); // Eager load the invited users
-}
-
-
+    {
+        return $this->hasMany(InvitedUser::class, 'user_id')
+                    ->with('invited.user_invitee'); // Eager load the invited users
+    }
+    public function inviteCode(){
+        return $this->hasOne(InvitationCode::class, 'user_id');
+    }
 
 }
