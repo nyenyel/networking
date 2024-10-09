@@ -8,7 +8,7 @@ export default function Descendant({data}) {
         <div className='flex font-sf bg-white mb-2 p-4 drop-shadow rounded-md'>
             <div className="flex-none text-center mr-2">
                 <img src={suki} alt="suki" className="w-auto h-24 mx-auto" /> {/* Centers the image horizontally */}
-                <div className="bg-trc rounded text-white px-2">STORE ID: 0001</div>
+                <div className="bg-trc rounded text-white px-2">STORE ID: {data?.store_info.id}</div>
             </div>
             <div className='flex-1  flex text-center'>
                 <div className='flex-1 text-white mb-8' >

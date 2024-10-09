@@ -34,68 +34,71 @@ export default function UserHomeOutlet() {
     {loading && <Loading />}
     {token == null && (<LoginRedirect/>)}
     <div className='flex flex-col font-sf select-none text-text'>
-        <div className='flex mb-2 gap-2'>
-            <div className='flex-none bg-white drop-shadow rounded-md  w-1/3 '>
-                <div className=' bg-trc px-10 py-2 text-center text-white  rounded-t-md'>
-                    MY ACCOUNT
-                </div>
-                <div className=''>
-                    <div className=' mt-2 text-center'>
-                        <span className="icon-[pajamas--profile] h-12 w-12"></span>
-                    </div>
-                    <div className='text-center font-sf-bold bg-trc text-white text-sm py-2'>ID No.: {store?.user.id}</div>
-                </div>
-                <div className=' px-3 pt-2 pb-2 '>
-                    <div className='font-sf-bold flex gap-1'>
-                        Name: 
-                        <div className='font-sf-light'>{store?.user.last_name}, {store?.user.first_name} { store?.user.middle_name.charAt(0)}.</div>
-                    </div>
-                    <div className='font-sf-bold flex gap-1'>
-                        Username: 
-                        <div className='font-sf-light'>{store?.user.username}</div>
-                    </div>
-                    <div className='font-sf-bold flex gap-1'>
-                        Email: 
-                        <div className='font-sf-light'>{store?.user.email}</div>
-                    </div>
-                    <div className='font-sf-bold flex gap-1'>
-                        Invite Code: 
-                        <div className='font-sf-light'>{store?.user.invite_code.code}</div>
-                    </div>
-                    <div className='font-sf-bold flex gap-1'>
-                        No. of Descendants: 
-                        <div className='font-sf-light'>{store?.descendants.length}</div>
-                    </div>
-                </div>
+    <div className='flex flex-wrap mb-2 gap-2'>
+        <div className='flex-none bg-white drop-shadow rounded-md w-full md:w-1/3'>
+            <div className='bg-trc px-10 py-2 text-center text-white rounded-t-md'>
+            MY ACCOUNT
             </div>
-            
-            <div className='flex-1 flex flex-col '>
-                <div className=' hover:scale-101 cursor-pointer flex-1 flex bg-gradient-to-br from-trc to-white mb-2 content-center rounded-md p-4 drop-shadow text-white'>
-                    <div className='flex-1 content-center font-sf-extrabold text-4xl'>
-                        My Sukikart Partners
-                    </div >
-                    <div className='flex-none content-center'>
-                        <img src={suki} alt='suki' className='w-auto h-20'/>
-                    </div>
-                </div>
-                <div className='flex-1 hover:scale-101 cursor-pointer  flex bg-gradient-to-tr from-trc to-white content-center rounded-md p-4 drop-shadow text-white'>
-                    <div className='flex-1 content-center font-sf-extrabold text-4xl'>
-                        Transaction History
-                    </div >
-                    <div className='flex-none content-center'>
-                        <img src={th} alt='suki' className='w-auto h-20'/>
-                    </div>
-                </div>
+            <div>
+            <div className='mt-2 text-center'>
+                <span className="icon-[pajamas--profile] h-12 w-12"></span>
             </div>
-            <div className=' hover:scale-101 cursor-pointer gap-10 flex-none flex bg-gradient-to-l from-trc to-dirty content-center rounded-md p-4 drop-shadow text-white'>
-                    <div className='flex-1 content-center font-sf-extrabold text-4xl'>
-                        Redeem
-                        <div>Points</div>
-                    </div >
-                    <div className='flex-none content-center'>
-                        <img src={coin} alt='suki' className='w-auto h-20'/>
-                    </div>
-                </div>
+            <div className='text-center font-sf-bold bg-trc text-white text-sm py-2'>
+                ID No.: {store?.user.id}
+            </div>
+            </div>
+            <div className='px-3 pt-2 pb-2'>
+            <div className='font-sf-bold flex gap-1'>
+                Name: 
+                <div className='font-sf-light'>{store?.user.last_name}, {store?.user.first_name} { store?.user.middle_name.charAt(0)}.</div>
+            </div>
+            <div className='font-sf-bold flex gap-1'>
+                Username: 
+                <div className='font-sf-light'>{store?.user.username}</div>
+            </div>
+            <div className='font-sf-bold flex gap-1'>
+                Email: 
+                <div className='font-sf-light'>{store?.user.email}</div>
+            </div>
+            <div className='font-sf-bold flex gap-1'>
+                Invite Code: 
+                <div className='font-sf-light'>{store?.user.invite_code.code}</div>
+            </div>
+            <div className='font-sf-bold flex gap-1'>
+                No. of Descendants: 
+                <div className='font-sf-light'>{store?.descendants.length}</div>
+            </div>
+            </div>
+        </div>
+
+        <div className='flex-1 flex flex-col w-full md:w-2/3'>
+            <div className='hover:scale-101 cursor-pointer flex-1 flex bg-gradient-to-br from-trc to-white mb-2 content-center rounded-md p-4 drop-shadow text-white'>
+            <div className='flex-1 content-center font-sf-extrabold text-4xl'>
+                My Sukikart Partners
+            </div>
+            <div className='flex-none content-center'>
+                <img src={suki} alt='suki' className='w-auto h-20'/>
+            </div>
+            </div>
+            <div className='flex-1 hover:scale-101 cursor-pointer flex bg-gradient-to-tr from-trc to-white content-center rounded-md p-4 drop-shadow text-white'>
+            <div className='flex-1 content-center font-sf-extrabold text-4xl'>
+                Transaction History
+            </div>
+            <div className='flex-none content-center'>
+                <img src={th} alt='suki' className='w-auto h-20'/>
+            </div>
+            </div>
+        </div>
+
+        <div className='hover:scale-101 cursor-pointer gap-10 flex-none flex bg-gradient-to-l from-trc to-dirty content-center rounded-md p-4 drop-shadow text-white w-full md:w-auto'>
+            <div className='flex-1 content-center font-sf-extrabold text-4xl'>
+            Redeem
+            <div>Points</div>
+            </div>
+            <div className='flex-none content-center'>
+            <img src={coin} alt='suki' className='w-auto h-20'/>
+            </div>
+        </div>
         </div>
         <div className='flex-1 text-white bg-white rounded-md  drop-shadow mb-2'>
                 <div className='bg-trc p-3 rounded-t-md text-ce'>

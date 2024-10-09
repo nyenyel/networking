@@ -1,7 +1,8 @@
 alias pc="php artisan config:clear
 php artisan cache:clear
 php artisan optimize:clear
-php artisan optimize"
+php artisan optimize
+php artisan route:clear"
 alias pam="pa make:model"
 alias req="pa make:request"
 alias res="pa make:resource"
