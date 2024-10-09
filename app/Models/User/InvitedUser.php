@@ -23,4 +23,5 @@ class InvitedUser extends Model
     {
         return $this->belongsTo(User::class, 'invited_user');
     }
+
 }

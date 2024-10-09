@@ -78,8 +78,12 @@ class User extends Authenticatable
         return $this->hasMany(InvitedUser::class, 'user_id');
     }
 
-    public function user_invitee() {
-        return $this->hasMany(InvitedUser::class, 'invited_user');
-    }
+    public function user_invitee()
+{
+    return $this->hasMany(InvitedUser::class, 'user_id')
+                ->with('invited.user_invitee'); // Eager load the invited users
+}
+
+
 
 }

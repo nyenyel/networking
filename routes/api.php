@@ -25,6 +25,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/test-invite-user', [UserController::class, 'AddUser']);
 Route::post('/redeem-points', [PointsController::class, 'redeemPoints']);
 Route::get('user/genealogy/{id}', [UserController::class, 'getGenealogy']);
+Route::get('/user/{id}/with-invites', [UserController::class, 'getUserWithInvites']);
+
 
 
 Route::get('/admin/dashboard', [AdminController::class, 'showDashboard']);
