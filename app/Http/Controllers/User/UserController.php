@@ -258,12 +258,14 @@ class UserController extends Controller
 
         $daily = $store->points/$daysDifference;
         $weekly = $daily * min($daysDifference, 7);
-    
+        $status = $store->status === 2 ? 'STORE OPEN': 'STORE CLOSE';
         return [
             'daily' => $daily,
-            'weekly' => $weekly
+            'weekly' => $weekly,
+            'status' => $status
         ];
     }
+
     // Recursive function to get all ancestors (users who invited the user)
     protected function getAncestors($user)
     {
@@ -308,16 +310,16 @@ class UserController extends Controller
         foreach ($invitedUsers as $invitedUser) {
             // Since 'invited' is eager loaded, use it directly from $invitedUser
             $invited = $invitedUser->invited; //storeInfo loaded
+            $invited->status = $invited->storeInfo->status === 2 ? 'OPEN' : 'CLOSE';
+            $invited->noInvited = $invited->storeInfo->status ;
             if ($invited) {
                 $descendants[] = $invited; 
-    
                 // Recursively get invitees of the invited user
                 $childDescendants = $this->getDescendants($invited);
                 $descendants = array_merge($descendants, $childDescendants);
             }
         }
         
-
         return $descendants;
     }
 
