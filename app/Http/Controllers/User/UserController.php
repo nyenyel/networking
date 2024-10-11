@@ -257,7 +257,7 @@ class UserController extends Controller
             $daysDifference = 1;
         }
 
-        $daily = $store->points/$daysDifference;
+        $daily = $store->points_limit/$daysDifference;
         $weekly = $daily * min($daysDifference, 7);
         $status = $store->status === 2 ? 'STORE OPEN': 'STORE CLOSE';
         return [

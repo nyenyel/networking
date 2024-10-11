@@ -15,6 +15,8 @@ class TransactionController extends Controller
             DB::rollBack();
             return response()->json(['message' => 'User not authenticated.'], 401);
         }
-        return response()->json($user->transactions);
+        $transaction = $user->transactions;
+        $transaction->load(['transaction']);
+        return response()->json($transaction);
     }
 }

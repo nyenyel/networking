@@ -126,7 +126,7 @@ class PointsController extends Controller
 
                 DB::commit();
 
-                return response()->json(['message'=>'redeemed successfully']);
+                return response()->json(['success'=>'redeemed successfully']);
 
             } else {
                 DB::rollBack();

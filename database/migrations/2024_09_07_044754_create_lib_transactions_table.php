@@ -18,8 +18,7 @@ return new class extends Migration
             $table->timestamps();
         });
         DB::table('lib_transactions')->upsert([
-            ['desc' => 'Pending'],
-            ['desc' => 'Claimed']
+            ['desc' => 'Redeem'],
         ], ['desc']);
     }
 

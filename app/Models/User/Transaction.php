@@ -24,7 +24,7 @@ class Transaction extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function lib_transactions() {
-        return $this->belongsTo(LibTransaction::class);
+    public function transaction():BelongsTo {
+        return $this->belongsTo(LibTransaction::class, 'transaction_type');
     }
 }
