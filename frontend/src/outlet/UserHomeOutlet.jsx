@@ -7,17 +7,60 @@ import LoginRedirect from '../context/LoginRedirect'
 import { AppContext } from '../context/AppContext'
 import Loading from '../component/Loading'
 import Descendant from '../cards/Descendant'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { Box, Modal } from '@mui/material';
+
 
 export default function UserHomeOutlet() {
     const {token, apiClient, user} = useContext(AppContext)
     const [loading, setLoading] = useState(false)
     const [store, setStore] = useState()
+    const [amount, setAmount] = useState()
+    const [apiResponse, setApiResponse] = useState()
+    const [modalIsOpen, setModalIsOpen] = useState(false)
+    const handleModal = () => setModalIsOpen(!modalIsOpen)
+    const redeemPoints = async () => {
+        try{
+            setLoading(true)
+            const response = await apiClient.post('api/redeem-points', amount)
+            if(response.data.message){
+                setApiResponse(response.data.message)
+            }
+            else{
+                navigate(0)
+            }
+        } catch(error) {
+            if (error.response) {
+                console.error('Error Response Data:', error.response.data);
+                setApiResponse(error.response.data.message)
+                console.log('error msg: ', error.response.data.message)
+              } else if (error.request) {
+                console.error('Error Request:', error.request);
+              } else {
+                console.error('Error Message:', error.message);
+              } 
+        } finally {
+            setLoading(false)
+        }
+    }
+    const handleChange = (e) => {
+        const {name, value} = e.target
+        setAmount({
+            ...amount,
+            [name]: value
+        })
+    }
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        redeemPoints()
+    }
+    const navigate = useNavigate()
     const genealogy = async () => {
         try{
             setLoading(true)
             const response = await apiClient.get(`api/user/genealogy/${user?.id}`)
             setStore(response.data)
-            console.log(response.data)
+            // console.log(response.data)
         } catch (e) {
             console.error(e.response)
         } finally {
@@ -33,6 +76,33 @@ export default function UserHomeOutlet() {
     <>
     {loading && <Loading />}
     {token == null && (<LoginRedirect/>)}
+    <Modal
+        open={modalIsOpen}
+        onClose={handleModal}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+        className="flex w-full z-20 justify-center items-center bg-black bg-opacity-50"
+    >
+        <Box className="bg-white rounded-lg shadow-lg text-def-t p-6">
+            <h3 id="modal-title" className="font-semibold text-xl">Redeem Points</h3>
+            <p id="modal-description" className="mb-4">This Popup is for redeeming points.</p>
+            <form onSubmit={handleSubmit}>
+                <label className="text-sm">Amount</label>
+                <br />
+                <input
+                    type="number"
+                    placeholder="Ex. 400"
+                    name="amount"
+                    onChange={handleChange}
+                    className="w-full p-2 rounded-md border-def-t border-opacity-5 border-2"
+                />
+                {apiResponse && (
+                    <div className="text-sm text-red-800 text-opacity-60">{apiResponse}</div>
+                )}
+                <button type="submit" className="bg-trc mt-2 bg-prc rounded-md py-2 w-full text-white">Redeem</button>
+            </form>
+        </Box>
+    </Modal>
     <div className='flex flex-col font-sf select-none text-text'>
     <div className='flex flex-wrap mb-2 gap-2'>
         <div className='flex-none bg-white drop-shadow rounded-md w-full md:w-1/3'>
@@ -81,16 +151,16 @@ export default function UserHomeOutlet() {
             </div>
             </div>
             <div className='flex-1 hover:scale-101 cursor-pointer flex bg-gradient-to-tr from-trc to-white content-center rounded-md p-4 drop-shadow text-white'>
-            <div className='flex-1 content-center font-sf-extrabold text-4xl'>
+            <NavLink to={'transaction'} className='flex-1 content-center font-sf-extrabold text-4xl'>
                 Transaction History
-            </div>
+            </NavLink>
             <div className='flex-none content-center'>
                 <img src={th} alt='suki' className='w-auto h-20'/>
             </div>
             </div>
         </div>
 
-        <div className='hover:scale-101 cursor-pointer gap-10 flex-none flex bg-gradient-to-l from-trc to-dirty content-center rounded-md p-4 drop-shadow text-white w-full md:w-auto'>
+        <div onClick={handleModal} className='hover:scale-101 cursor-pointer gap-10 flex-none flex bg-gradient-to-l from-trc to-dirty content-center rounded-md p-4 drop-shadow text-white w-full md:w-auto'>
             <div className='flex-1 content-center font-sf-extrabold text-4xl'>
             Redeem
             <div>Points</div>
@@ -102,7 +172,7 @@ export default function UserHomeOutlet() {
         </div>
         <div className='flex-1 text-white bg-white rounded-md  drop-shadow mb-2'>
                 <div className='bg-trc p-3 rounded-t-md text-ce'>
-                    My Points
+                    Redeemable Points
                 </div>
                 <div className='text-text text-opacity-50 flex text-center py-4 text-5xl'>
                     <div className='flex-1'/>
@@ -148,6 +218,7 @@ export default function UserHomeOutlet() {
             ))}
         </div>
     </div>
+    
     </>
   )
 }

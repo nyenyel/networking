@@ -7,6 +7,7 @@ import LoginModule from "../module/LoginModule";
 import UserModule from "../module/UserModule";
 import UserHomeOutlet from "../outlet/UserHomeOutlet";
 import GenealogyOutlet from "../outlet/GenealogyOutlet";
+import TransactionOutlet from "../outlet/TransactionOutlet";
 
 export const router = createBrowserRouter([
     {
@@ -43,6 +44,11 @@ export const router = createBrowserRouter([
             {
                 path: 'home',
                 element: <UserHomeOutlet />,
+                errorElement: <ErrorPage />
+            },
+            {
+                path: 'home/transaction',
+                element: <TransactionOutlet />,
                 errorElement: <ErrorPage />
             },
             {
