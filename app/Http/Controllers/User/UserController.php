@@ -325,20 +325,20 @@ class UserController extends Controller
     }
 
     public function getUserWithInvites($id): JsonResponse
-{
-    try {
-        // Eager load user_invitee and their invited users
-        $user = User::with(['user_invitee.invited.user_invitee.invited'])->findOrFail($id);
-        // Return a JsonResponse with the UserResource wrapped in it
-        return response()->json(new UserResource($user));
-    } catch (ModelNotFoundException $e) {
-        return response()->json(['message' => 'User not found.'], 404);
-    } catch (\Exception $e) {
-        // Log the error message for debugging
-        // \Log::error($e->getMessage());
-        return response()->json(['message' => 'An error occurred: ' . $e->getMessage()], 500);
+    {
+        try {
+            // Eager load user_invitee and their invited users
+            $user = User::with(['user_invitee.invited.user_invitee.invited'])->findOrFail($id);
+            // Return a JsonResponse with the UserResource wrapped in it
+            return response()->json(new UserResource($user));
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['message' => 'User not found.'], 404);
+        } catch (\Exception $e) {
+            // Log the error message for debugging
+            // \Log::error($e->getMessage());
+            return response()->json(['message' => 'An error occurred: ' . $e->getMessage()], 500);
+        }
     }
-}
 
 
 }
