@@ -23,7 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 //API for testing
 Route::post('/test-invite-user', [UserController::class, 'AddUser']);
-Route::post('/redeem-points', [PointsController::class, 'redeemPoints']);
+Route::post('/redeem-points', [PointsController::class, 'redeemPoints'])->middleware('auth:sanctum');
 Route::get('user/genealogy/{id}', [UserController::class, 'getGenealogy']);
 Route::get('/user/{id}/with-invites', [UserController::class, 'getUserWithInvites']);
 

@@ -10,6 +10,7 @@ use App\Models\User\InvitationCode;
 use App\Models\User\InvitedUser;
 use App\Models\User\StoreInfo;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -334,7 +335,7 @@ class UserController extends Controller
         return response()->json(['message' => 'User not found.'], 404);
     } catch (\Exception $e) {
         // Log the error message for debugging
-        \Log::error($e->getMessage());
+        // \Log::error($e->getMessage());
         return response()->json(['message' => 'An error occurred: ' . $e->getMessage()], 500);
     }
 }
