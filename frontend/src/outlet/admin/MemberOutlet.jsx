@@ -34,7 +34,6 @@ export default function MemberOutlet() {
           } else {
             console.error('Error Message:', error.message);
           } 
-
     } finally {
       setLoading(false)
       console.log(invCodeRes)
