@@ -8,6 +8,9 @@ import UserModule from "../module/UserModule";
 import UserHomeOutlet from "../outlet/UserHomeOutlet";
 import GenealogyOutlet from "../outlet/GenealogyOutlet";
 import TransactionOutlet from "../outlet/TransactionOutlet";
+import AdminModule from "../module/AdminModule";
+import DasboardOutlet from "../outlet/admin/DasboardOutlet";
+import MemberOutlet from "../outlet/admin/MemberOutlet";
 
 export const router = createBrowserRouter([
     {
@@ -55,6 +58,27 @@ export const router = createBrowserRouter([
                 path: 'genealogy',
                 element: <GenealogyOutlet />,
                 errorElement: <ErrorPage />
+            },
+            {
+                path: 'admin',
+                element: <AdminModule />,
+                errorElement: <ErrorPage />,
+                children: [
+                    {
+                        path: 'dashboard',
+                        element: <DasboardOutlet />,
+                        errorElement: <ErrorPage />
+                    },
+                    {
+                        path: 'member',
+                        element: <MemberOutlet />,
+                        errorElement: <ErrorPage />
+                    },
+                    {
+                        index:true,
+                        element: <Navigate to={'dashboard'} replace />
+                    }
+                ]
             },
             {
                 index:true,

@@ -10,7 +10,7 @@ export default {
     extend: {
       colors:{
         dirty: '#f0f0f0',
-        src: '#FF0303',
+        src: '#db1212',
         trc: '#1F9DF9',
         text: '#212121',
       },

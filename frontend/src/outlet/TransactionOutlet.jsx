@@ -83,7 +83,7 @@ export default function TransactionOutlet() {
     )
 }
 
-const formatDate = (isoDateString) => {
+export const formatDate = (isoDateString) => {
     const date = new Date(isoDateString);
     const day = date.getDate();
     const month = date.toLocaleString('default', { month: 'short' }).toUpperCase(); // 'OCT'

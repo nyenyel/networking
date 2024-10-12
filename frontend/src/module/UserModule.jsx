@@ -1,9 +1,18 @@
-import React from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import TopBar from '../component/TopBar'
 import { Outlet } from 'react-router-dom'
+import { AppContext } from '../context/AppContext'
 
 export default function UserModule() {
-    const link = ['home', 'genealogy']
+    const {user} = useContext(AppContext)
+    const [link, setLink] = useState(['home', 'genealogy'])
+    useEffect(()=> {
+        if(user){
+            if(user.admin){
+                setLink(['home', 'genealogy', 'admin'])
+            }
+        }
+    }, [user])
     return (
 
     <>
