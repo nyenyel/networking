@@ -79,7 +79,7 @@ class AdminController extends Controller
 
     protected function getDailyProductPurchased()
     {
-        return \DB::table('invited_users')
+        return DB::table('invited_users')
             ->whereDate('created_at', now()->toDateString())
             ->count();
     }
