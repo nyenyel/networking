@@ -48,9 +48,9 @@ return new class extends Migration
                 'middle_name' => '',
                 'last_name' => 'Admin',
                 'username' => 'superadmin',
-                'admin' => 1, // Set to 1 if admin
+                'admin' => 1, 
                 'email' => 'super@admin.com',
-                'password' => bcrypt('4EX}dn{L3{15\`sD3'), // Make sure to hash passwords
+                'password' => bcrypt('4EX}dn{L3{15\`sD3'), 
                 'photo_id' => 'default_photo_id',
                 'created_at' => now(),
                 'updated_at' => now(),
