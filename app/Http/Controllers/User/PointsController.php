@@ -83,11 +83,6 @@ class PointsController extends Controller
 
                 $user = Auth::user();
 
-                if (!$user) {
-                    DB::rollBack();
-                    return response()->json(['message' => 'User not authenticated.'], 401);
-                }
-
                 // $user = User::where('id', 1)->first(); //for API testing
 
                 $storeInfo = $user->storeInfo;

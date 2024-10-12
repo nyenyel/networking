@@ -29,6 +29,8 @@ Route::get('/transaction', [TransactionController::class, 'transaction'])->middl
 Route::get('user/genealogy/{id}', [UserController::class, 'getGenealogy']);
 Route::get('/user/{id}/with-invites', [UserController::class, 'getUserWithInvites']);
 
+Route::prefix('admin')->group(function () {
+    Route::apiResource('user', UserController::class)->only('index')->middleware('auth:sanctum');
+    Route::get('dashboard', [AdminController::class, 'showDashboard'])->middleware('auth:sanctum');
+});
 
-
-Route::get('/admin/dashboard', [AdminController::class, 'showDashboard']);

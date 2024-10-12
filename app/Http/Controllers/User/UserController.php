@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Str;
 
 class UserController extends Controller
@@ -23,7 +24,18 @@ class UserController extends Controller
      */
     public function index()
     {
-        //
+        $user = Auth::user();
+        if (!$user) {
+            DB::rollBack();
+            return response()->json(['message' => 'User not authenticated.'], 401);
+        }
+        if($user->admin){
+            $data = User::all();
+            $data->load(['inviteCode']);
+            return response()->json($data);
+        } else{
+            return response()->json(['message' => 'Unauthorized']);
+        }
     }
 
     /**
