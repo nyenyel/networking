@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id');
             $table->foreignId('transaction_type');
             $table->boolean('status');
+            $table->string('code')->unique();
             $table->float('amount')->nullable();
             $table->timestamps();
 

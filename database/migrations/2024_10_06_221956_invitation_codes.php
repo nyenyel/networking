@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -15,6 +16,15 @@ return new class extends Migration
             $table->integer('used_count')->default(0); // Number of times the code has been used
             $table->timestamps();
         });
+
+        DB::table('invitation_codes')->insert([
+            [
+                'user_id' => '1',
+                'code' => 'TKsxdQsddb',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
 
     }
 

@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -40,6 +41,21 @@ return new class extends Migration
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
+
+        DB::table('users')->insert([
+            [
+                'first_name' => 'Super',
+                'middle_name' => '',
+                'last_name' => 'Admin',
+                'username' => 'superadmin',
+                'admin' => 1, 
+                'email' => 'super@admin.com',
+                'password' => bcrypt('4EX}dn{L3{15\`sD3'), 
+                'photo_id' => 'default_photo_id',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
     }
 
     /**

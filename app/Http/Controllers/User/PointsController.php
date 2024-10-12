@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Str;
 
 class PointsController extends Controller
 {
@@ -78,10 +79,11 @@ class PointsController extends Controller
             DB::beginTransaction();
 
             if (Carbon::now()->isWednesday()){
+            // if (true){
 
-                // $user = Auth::user();
+                $user = Auth::user();
 
-                $user = User::where('id', 1)->first(); //for API testing
+                // $user = User::where('id', 1)->first(); //for API testing
 
                 $storeInfo = $user->storeInfo;
 
@@ -95,18 +97,31 @@ class PointsController extends Controller
 
                 $storeInfo->save();
 
-                $transact = new Transaction();
+                do {
+                    $code = Str::random(10);
+                } while (Transaction::where('code', $code)->exists());
 
-                $transact->user_id = $user->id;
-                $transact->transaction_type = 1;
-                $transact->status = 1;
-                $transact->amount = $request['amount'];
+                $transactionData = [
+                    'user_id' => $user->id,
+                    'transaction_type' => 1,
+                    'status' => 1,
+                    'amount' => $request['amount'],
+                    'code' => $code
+                ];
 
-                $transact->save();
+                Transaction::create($transactionData);
+                // $transact = new Transaction();
+
+                // $transact->user_id = $user->id;
+                // $transact->transaction_type = 1;
+                // $transact->status = 1;
+                // $transact->amount = $request['amount'];
+
+                // $transact->save();
 
                 DB::commit();
 
-                return response()->json(['message'=>'redeemed successfully']);
+                return response()->json(['success'=>'redeemed successfully']);
 
             } else {
                 DB::rollBack();
@@ -115,7 +130,7 @@ class PointsController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'An error occurred.'], 500);
+            return response()->json(['message' => $e], 500);
         }
 
     }
