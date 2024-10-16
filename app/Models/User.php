@@ -88,4 +88,9 @@ class User extends Authenticatable
         return $this->hasOne(InvitationCode::class, 'user_id');
     }
 
+    public function getStoreNumberAttribute()
+    {
+        return $this->store_referrer()->count();
+    }
+
 }

@@ -19,7 +19,8 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('username');
             $table->boolean('admin')->default(0);
-            $table->string('email')->unique();
+            $table->boolean('store_number')->default(0);
+            $table->string('email');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('photo_id');
@@ -48,9 +49,9 @@ return new class extends Migration
                 'middle_name' => '',
                 'last_name' => 'Admin',
                 'username' => 'superadmin',
-                'admin' => 1, 
+                'admin' => 1,
                 'email' => 'super@admin.com',
-                'password' => bcrypt('4EX}dn{L3{15\`sD3'), 
+                'password' => bcrypt('4EX}dn{L3{15\`sD3'),
                 'photo_id' => 'default_photo_id',
                 'created_at' => now(),
                 'updated_at' => now(),
