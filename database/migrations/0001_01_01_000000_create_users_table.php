@@ -18,8 +18,9 @@ return new class extends Migration
             $table->string('middle_name');
             $table->string('last_name');
             $table->string('username');
+            $table->integer('store_no');
             $table->boolean('admin')->default(0);
-            $table->string('email')->unique();
+            $table->string('email');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('photo_id');
