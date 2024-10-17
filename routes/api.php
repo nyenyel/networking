@@ -28,6 +28,9 @@ Route::post('/redeem-points', [PointsController::class, 'redeemPoints'])->middle
 Route::get('/transaction', [TransactionController::class, 'transaction'])->middleware('auth:sanctum');
 Route::get('user/genealogy/{id}', [UserController::class, 'getGenealogy']);
 Route::get('/user/{id}/with-invites', [UserController::class, 'getUserWithInvites']);
+Route::post('/verify-email', [UserController::class, 'verifyEmail']);
+Route::post('/create-store', [UserController::class, 'createStore']);
+Route::post('/create-store-v2/{user}', [UserController::class, 'createStoreV2']);
 
 Route::prefix('admin')->group(function () {
     Route::apiResource('user', UserController::class)->only('index')->middleware('auth:sanctum');
