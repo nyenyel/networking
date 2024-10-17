@@ -23,32 +23,32 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Create users and store info for each
-        User::factory(5)->create()->each(function ($user) {
-            // Create store info for the new user
-            $storeInfo = StoreInfo::factory()->create([
-                'user_id' => $user->id,
-                'invited_by' => User::inRandomOrder()->first()->id, // Assuming you want random invitation links
-                'points' => 0,
-                'status' => true,
-            ]);
+        // User::factory(5)->create()->each(function ($user) {
+        //     // Create store info for the new user
+        //     $storeInfo = StoreInfo::factory()->create([
+        //         'user_id' => $user->id,
+        //         'invited_by' => User::inRandomOrder()->first()->id, // Assuming you want random invitation links
+        //         'points' => 0,
+        //         'status' => true,
+        //     ]);
 
-            // Insert data into invited_users table
-            DB::table('invited_users')->insert([
-                'user_id' => $storeInfo->invited_by,
-                'invited_user' => $storeInfo->user_id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        //     // Insert data into invited_users table
+        //     DB::table('invited_users')->insert([
+        //         'user_id' => $storeInfo->invited_by,
+        //         'invited_user' => $storeInfo->user_id,
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ]);
 
-            // Generate a unique invitation code for the user
-            $invitationCode = Str::random(20); // Generate random 8-character string
+        //     // Generate a unique invitation code for the user
+        //     $invitationCode = Str::random(20); // Generate random 8-character string
 
-            // Insert the invitation code into the invitation_codes table
-            InvitationCode::create([
-                'user_id' => $user->id,
-                'code' => $invitationCode,
-                'used_count' => 0, // Initialize usage count to 0
-            ]);
-        });
+        //     // Insert the invitation code into the invitation_codes table
+        //     InvitationCode::create([
+        //         'user_id' => $user->id,
+        //         'code' => $invitationCode,
+        //         'used_count' => 0, // Initialize usage count to 0
+        //     ]);
+        // });
     }
 }

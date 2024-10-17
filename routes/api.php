@@ -23,14 +23,14 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 //API for testing
-Route::post('/test-invite-user', [UserController::class, 'AddUser']);
+Route::post('/test-invite-user', [UserController::class, 'AddUser'])->middleware('auth:sanctum');
 Route::post('/redeem-points', [PointsController::class, 'redeemPoints'])->middleware('auth:sanctum');
 Route::get('/transaction', [TransactionController::class, 'transaction'])->middleware('auth:sanctum');
 Route::get('user/genealogy/{id}', [UserController::class, 'getGenealogy']);
 Route::get('/user/{id}/with-invites', [UserController::class, 'getUserWithInvites']);
 Route::post('/verify-email', [UserController::class, 'verifyEmail']);
 Route::post('/create-store', [UserController::class, 'createStore']);
-Route::post('/create-store-v2/{user}', [UserController::class, 'createStoreV2']);
+Route::post('/create-store-v2/{user}', [UserController::class, 'createStoreV2'])->middleware('auth:sanctum');
 
 Route::prefix('admin')->group(function () {
     Route::apiResource('user', UserController::class)->only('index')->middleware('auth:sanctum');
