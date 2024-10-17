@@ -78,7 +78,7 @@ class PointsController extends Controller
 
             DB::beginTransaction();
 
-            if (Carbon::now()->isWednesday()){
+            if (Carbon::now()->isSaturday()){
             // if (true){
 
                 $user = Auth::user();

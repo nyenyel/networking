@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\User\InvitationCode;
 use App\Models\User\InvitedUser;
 use App\Models\User\StoreInfo;
+use App\Models\WeeklyDashboardMonitoring;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -146,6 +147,14 @@ class UserController extends Controller
         // Generate and save the unique invitation code for the new user
         $newInvitationCode = $this->generateInvitationCodeForUser($user->id);
 
+        $monitoring = WeeklyDashboardMonitoring::where('id', 1)->first();
+
+        $monitoring->package_sold += 1;
+        $monitoring->product_purchased += 500;
+        $monitoring->company_revenue += 1500;
+
+        $monitoring->save();
+
         return response()->json([
             'message' => 'User created successfully',
             'user' => $user,
@@ -269,6 +278,7 @@ class UserController extends Controller
     {
         // get  inviter of the current user
         $inviterStoreInfo = StoreInfo::where('user_id', $userId)->first();
+        $monitoring = WeeklyDashboardMonitoring::where('id', 1)->first();
 
         if ($inviterStoreInfo) {
             $parentId = $inviterStoreInfo->invited_by;
@@ -281,7 +291,9 @@ class UserController extends Controller
                     // pass points to the parent store
                     $parentStoreInfo->points += 10;
                     $parentStoreInfo->points_limit += 10;
+                    $monitoring->members_commission += 10;
                     $parentStoreInfo->save();
+                    $monitoring->save();
 
                     if($parentStoreInfo->points_limit >= 5000){
                         $parentStoreInfo->status = 3; //graduate

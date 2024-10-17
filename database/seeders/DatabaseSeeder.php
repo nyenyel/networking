@@ -18,7 +18,8 @@ class DatabaseSeeder extends Seeder
     {
 
         $this->call([
-            LibTransactionSeeder::class
+            LibTransactionSeeder::class,
+            WeeklyMonitoringDashboardSeeder::class
         ]);
 
         // Create users and store info for each
