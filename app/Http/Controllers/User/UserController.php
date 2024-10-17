@@ -613,7 +613,6 @@ class UserController extends Controller
 
         $this->recordInvitation($user->inviteCode->code, $newUser->id);
         $this->updateStoreInviterInfo($user->id, $newStore->id);
-        // $this->passPointsToParentStore($user->id);
 
         return response()->json(['message' => 'Success'], 500);
     }
@@ -623,6 +622,7 @@ class UserController extends Controller
             $invTable = InvitationCode::where('code', $invitationCode->user->storeInfo->invitation_code)->first();
             $this->recursiveParentPointPassing($invTable);
         }
+
         $invitedUser = InvitedUser::where('user_id', $invitationCode->user->id)->get();
         $storeAreOpen = $this->checkStatusOfStore($invitedUser);
         
@@ -634,7 +634,7 @@ class UserController extends Controller
     public function checkStatusOfStore($invitedUser){
         if($invitedUser[0]->invited->storeInfo->status === 1 && $invitedUser[1]->invited->storeInfo->status === 1 ){
             return true;
-        } else{
+        } else {
             return false;
         }
     }
