@@ -27,6 +27,7 @@ class User extends Authenticatable
         'middle_name',
         'last_name',
         'username',
+        'store_no',
         'admin',
         'email',
         'email_verified_at',
@@ -86,6 +87,11 @@ class User extends Authenticatable
     }
     public function inviteCode(){
         return $this->hasOne(InvitationCode::class, 'user_id');
+    }
+
+    public function getStoreNumberAttribute()
+    {
+        return $this->store_referrer()->count();
     }
 
 }

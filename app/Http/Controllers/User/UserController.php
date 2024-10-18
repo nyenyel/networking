@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Events\DashboardUpdated;
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\InviteUserRequest;
 use App\Http\Resources\UserResource;
@@ -9,13 +11,18 @@ use App\Models\User;
 use App\Models\User\InvitationCode;
 use App\Models\User\InvitedUser;
 use App\Models\User\StoreInfo;
+use App\Models\WeeklyDashboardMonitoring;
 use Carbon\Carbon;
+use Error;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Str;
+
+use function Pest\Laravel\json;
 
 class UserController extends Controller
 {
@@ -30,8 +37,8 @@ class UserController extends Controller
             return response()->json(['message' => 'User not authenticated.'], 401);
         }
         if($user->admin){
-            $data = User::all();
-            $data->load(['inviteCode']);
+            $data = User::where('store_no', 0)->get();
+            $data->load(['inviteCode', 'storeInfo']);
             return response()->json($data);
         } else{
             return response()->json(['message' => 'Unauthorized']);
@@ -88,69 +95,83 @@ class UserController extends Controller
 
     public function AddUser(InviteUserRequest $request)
     {
-        // Validate the request data
-        $valid_req = $request->validated();
-        $valid_req['password'] = bcrypt($valid_req['password']);
+            $authUser = Auth::user();
+            if(!$authUser->admin){
+                return response()->json(['message' => 'Unaauthorize Account'], 400);
+            }
+            // Validate the request data
+            $valid_req = $request->validated();
 
-        // Initialize $invitedById as null in case there's no invitation code
-        $invitedById = null;
+            $valid_req['password'] = bcrypt($valid_req['password']);
 
-        // Check if an invitation code was provided
-        if (isset($valid_req['invitation_code'])) {
-            // Validate the invitation code
-            $invitationCode = InvitationCode::where('code', $valid_req['invitation_code'])->first();
+            // Initialize $invitedById as null in case there's no invitation code
+            $invitedById = null;
 
-            if (!$invitationCode) {
-                return response()->json(['message' => 'Invalid invitation code'], 400);
+            // Check if an invitation code was provided
+            if (isset($valid_req['invitation_code'])) {
+                // Validate the invitation code
+                $invitationCode = InvitationCode::where('code', $valid_req['invitation_code'])->first();
+
+                if (!$invitationCode) {
+                    return response()->json(['message' => 'Invalid invitation code'], 400);
+                }
+
+                // Check if the code has been used more than twice
+                if ($invitationCode->used_count >= 2) {
+                    return response()->json(['message' => 'Invitation code has already been used 2 times'], 400);
+                }
+
+                // Get the inviter's user ID from the invitation code
+                $invitedById = $invitationCode->user_id;
+
+                // Increment the used count for the invitation code
+                $invitationCode->increment('used_count');
             }
 
-            // Check if the code has been used more than twice
-            if ($invitationCode->used_count >= 2) {
-                return response()->json(['message' => 'Invitation code has already been used 2 times'], 400);
+            // Create the new user
+            $user = User::create($valid_req);
+
+            // Set default store information for the new user
+            $defaultStoreInfo = [
+                'user_id' => $user->id,
+                'invited_by' => $invitedById, // Could be null if no invitation code was provided
+                'points' => 0,
+                'points_limit' => 0,
+                'unpaid' => 1,
+                'status' => 0,
+                'invitation_code' => $valid_req['invitation_code'] ?? null, // Save inviter's invitation code if available
+            ];
+
+            // Create store info for the new user
+            $store_info = StoreInfo::create($defaultStoreInfo);
+
+            // If an invitation code was provided, record the invitation and update inviter's info
+            if ($invitedById) {
+                // Record the invitation (link inviter and invitee using the inviter's user ID)
+                $this->recordInvitation($valid_req['invitation_code'], $user->id);
+
+                // Update inviter's store info
+                $this->updateInviterStoreInfo($invitedById);
             }
 
-            // Get the inviter's user ID from the invitation code
-            $invitedById = $invitationCode->user_id;
+            // Generate and save the unique invitation code for the new user
+            $newInvitationCode = $this->generateInvitationCodeForUser($user->id);
 
-            // Increment the used count for the invitation code
-            $invitationCode->increment('used_count');
-        }
+            $monitoring = WeeklyDashboardMonitoring::where('id', 1)->first();
 
-        // Create the new user
-        $user = User::create($valid_req);
+            $monitoring->package_sold += 1;
+            $monitoring->product_purchased += 500;
+            $monitoring->company_revenue += 1500;
 
-        // Set default store information for the new user
-        $defaultStoreInfo = [
-            'user_id' => $user->id,
-            'invited_by' => $invitedById, // Could be null if no invitation code was provided
-            'points' => 0,
-            'points_limit' => 0,
-            'unpaid' => 1,
-            'status' => 0,
-            'invitation_code' => $valid_req['invitation_code'] ?? null, // Save inviter's invitation code if available
-        ];
+            $monitoring->save();
+            $this->realtimeEvent();
+            return response()->json([
+                'message' => 'User created successfully',
+                'user' => $user,
+                'default_store_info' => $store_info,
+                'invitation_code' => $newInvitationCode // Return the newly created invitation code
+            ]);
 
-        // Create store info for the new user
-        $store_info = StoreInfo::create($defaultStoreInfo);
-
-        // If an invitation code was provided, record the invitation and update inviter's info
-        if ($invitedById) {
-            // Record the invitation (link inviter and invitee using the inviter's user ID)
-            $this->recordInvitation($valid_req['invitation_code'], $user->id);
-
-            // Update inviter's store info
-            $this->updateInviterStoreInfo($invitedById);
-        }
-
-        // Generate and save the unique invitation code for the new user
-        $newInvitationCode = $this->generateInvitationCodeForUser($user->id);
-
-        return response()->json([
-            'message' => 'User created successfully',
-            'user' => $user,
-            'default_store_info' => $store_info,
-            'invitation_code' => $newInvitationCode // Return the newly created invitation code
-        ]);
     }
 
     protected function generateInvitationCodeForUser($userId)
@@ -205,10 +226,70 @@ class UserController extends Controller
         }
     }
 
+    protected function updateStoreInviterInfo($invitedById, $invitingStoreId)
+    {
+        // Find the store info of the inviter using the inviting store ID passed
+        $inviterStoreInfo = StoreInfo::where('user_id', $invitedById)
+                                    ->where('id', $invitingStoreId)
+                                    ->first();
+
+        if ($inviterStoreInfo) {
+            // Increment the invited_users_count
+            $inviterStoreInfo->increment('invited_users_count');
+
+            // Update status to 2 if 2 users have been invited
+            if ($inviterStoreInfo->invited_users_count >= 2) {
+                $inviterStoreInfo->status = 2;
+                $inviterStoreInfo->save();
+
+                // Pass points to the parent store using the inviting store ID
+                $this->passPointsToParentStoreByStoreId($invitingStoreId);
+            }
+        }
+    }
+
+    protected function passPointsToParentStoreByStoreId($invitingStoreId)
+    {
+        // Get the store info using the provided store ID
+        $inviterStoreInfo = StoreInfo::find($invitingStoreId);
+
+        if ($inviterStoreInfo) {
+            $parentId = $inviterStoreInfo->invited_by;
+
+            if ($parentId) {
+                // Get the parent's store info
+                $parentStoreInfo = StoreInfo::where('user_id', $parentId)->first();
+
+                if ($parentStoreInfo) {
+                    // Pass points to the parent store
+                    $parentStoreInfo->points += 10;
+                    $parentStoreInfo->points_limit += 10;
+                    $parentStoreInfo->save();
+
+                    // Check if the parent store has reached the points limit
+                    if ($parentStoreInfo->points_limit >= 5000) {
+                        $parentStoreInfo->status = 3; // Graduate
+                        $parentStoreInfo->save();
+
+                        // Update any stores that were invited by this parent
+                        StoreInfo::where('invited_by', $parentId)
+                                ->update(['invited_by' => null]);
+                    }
+
+                    // Recursively pass points to the grandparent store, etc.
+                    $this->passPointsToParentStoreByStoreId($parentStoreInfo->id); // Pass the parent store ID
+                }
+            }
+        }
+    }
+
+
+
     protected function passPointsToParentStore($userId)
     {
         // get  inviter of the current user
         $inviterStoreInfo = StoreInfo::where('user_id', $userId)->first();
+        $monitoring = WeeklyDashboardMonitoring::where('id', 1)->first();
 
         if ($inviterStoreInfo) {
             $parentId = $inviterStoreInfo->invited_by;
@@ -221,7 +302,9 @@ class UserController extends Controller
                     // pass points to the parent store
                     $parentStoreInfo->points += 10;
                     $parentStoreInfo->points_limit += 10;
+                    $monitoring->members_commission += 10;
                     $parentStoreInfo->save();
+                    $monitoring->save();
 
                     if($parentStoreInfo->points_limit >= 5000){
                         $parentStoreInfo->status = 3; //graduate
@@ -271,7 +354,7 @@ class UserController extends Controller
 
         $daily = $store->points_limit/$daysDifference;
         $weekly = $daily * min($daysDifference, 7);
-        $status = $store->status === 2 ? 'STORE OPEN': 'STORE CLOSE';
+        $status = $store->status === 1 ? 'STORE OPEN': 'STORE CLOSE';
         return [
             'daily' => $daily,
             'weekly' => $weekly,
@@ -317,22 +400,22 @@ class UserController extends Controller
         // }
 
         $invitedUsers = InvitedUser::where('user_id', $user->id)
-                        ->with(['invited.storeInfo']) 
+                        ->with(['invited.storeInfo'])
                         ->get();
-        
+
         foreach ($invitedUsers as $invitedUser) {
             // Since 'invited' is eager loaded, use it directly from $invitedUser
             $invited = $invitedUser->invited; //storeInfo loaded
             $invited->status = $invited->storeInfo->status === 2 ? 'OPEN' : 'CLOSE';
             $invited->noInvited = $invited->storeInfo->status ;
             if ($invited) {
-                $descendants[] = $invited; 
+                $descendants[] = $invited;
                 // Recursively get invitees of the invited user
                 $childDescendants = $this->getDescendants($invited);
                 $descendants = array_merge($descendants, $childDescendants);
             }
         }
-        
+
         return $descendants;
     }
 
@@ -352,5 +435,251 @@ class UserController extends Controller
         }
     }
 
+    public function verifyEmail(Request $request)
+    {
+        // Validate the email input
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
 
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Fetch the user by email
+        $user = User::where('email', $request->email)->get();
+
+        if (!$user) {
+            return response()->json(['errors' => ['email' =>'User not found']], 404);
+        }
+
+        if ($user->count() === 0 ) {
+            return response()->json(['errors' => ['email' => 'User Dont Exist.']], 404);
+        }
+        // Retrieve all stores for the user
+        // $stores = $user->store_referrer()->get();
+        $user->load(['storeInfo']);
+        return response()->json([
+            'users' => $user,
+        ]);
+    }
+
+    public function createStore(Request $request, User $user)
+    {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+            //**********************/
+            // Di na kailangan this kasi pasa nalang natin yung user since maayos naman yung relationship ng  dtb natin
+            // yung user kasi connected naman na siya sa store_info, invitation_code
+            //**********************/
+
+            
+            // 'invitation_code' => 'nullable|string', 
+            // 'inviting_store_id' => 'nullable|exists:store_infos,id', // Store ID of the inviter's store
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Find the user by email
+        $user = User::where('email', $request->email)->first();
+
+        // Initialize inviter-related variables
+        $invitedById = null;
+        $invitingStoreId = $request->inviting_store_id;
+
+        // Handle invitation code
+        if ($request->filled('invitation_code')) {
+            // $invitationCode = InvitationCode::where('code', $request->invitation_code)->first();
+            // eto magiging ganito
+            $invitationCode = $user->inviteCode->code;
+
+            if (!$invitationCode) {
+                return response()->json(['message' => 'Invalid invitation code'], 400);
+            }
+
+            if ($invitationCode->used_count >= 2) {
+                return response()->json(['message' => 'Invitation code has already been used 2 times'], 400);
+            }
+
+            // Get inviter's user ID
+            $invitedById = $invitationCode->user_id;
+
+            // Increment invitation code usage
+            $invitationCode->increment('used_count');
+        }
+
+        // Prepare default store info
+        $defaultStoreInfo = [
+            'user_id' => $user->id,
+            'invited_by' => $invitedById,
+            'invitation_code' => $request->invitation_code,
+            'points' => 0,
+            'points_limit' => 100,
+            'unpaid' => true,
+            'status' => false,
+            'last_redeemed' => now()->subDays(30),
+        ];
+
+        // Create store info for the new user
+        $store_info = StoreInfo::create($defaultStoreInfo);
+
+        // If an invitation code was provided, record the invitation and update inviter's info
+        if ($invitedById) {
+            // Record the invitation (link inviter and invitee using the inviter's user ID)
+            $this->recordInvitation($request->invitation_code, $user->id);
+
+            // Update inviter's store info and increment the invited users count
+            $this->updateStoreInviterInfo($invitedById, $invitingStoreId);
+
+            // Pass points to all ancestors of the user who invited the current user
+            $this->passPointsToParentStore($invitedById);
+        }
+
+        // Generate and save the unique invitation code for the new user
+        $newInvitationCode = $this->generateInvitationCodeForUser($user->id);
+
+        return response()->json([
+            'message' => 'Store created successfully for existing user.',
+            'user' => [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+            ],
+            'default_store_info' => $store_info,
+            'invitation_code' => $newInvitationCode,
+        ], 201);
+    }
+
+
+    public function createStoreV2(Request $request, User $user){
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        if ($user->inviteCode->used_count >= 2) {
+            return response()->json(['errors' => ['message' => 'Invitation code has already been used 2 times']], 400);
+        }
+        $user->inviteCode->increment('used_count');
+        $counter = $user->inviteCode->used_count;
+
+        $weeklyDashboard = WeeklyDashboardMonitoring::first();
+        $weeklyDashboard->package_sold += 1;
+        $weeklyDashboard->product_purchased += 500;
+        $weeklyDashboard->company_revenue += 1500;
+        $weeklyDashboard->save();
+
+        if($counter >= 2){
+            $user->storeInfo->status = 1;
+            $user->storeInfo->save();
+            if($user->storeInfo->invitation_code !== null){
+                $invTable = InvitationCode::where('code', $user->storeInfo->invitation_code)->first();
+                $this->recursiveParentPointPassing($invTable);
+            }
+        }
+
+        $noOfStore = User::where('email', $user->email)->count();
+        $data = [
+                "first_name" => $user->first_name,
+                "middle_name" => $user->middle_name,
+                "last_name"=> $user->last_name,
+                "username"=> $user->username,
+                "store_no"=> $noOfStore,
+                "email"=> $user->email,
+                "password"=> ':L}:?{<{H:SPE',
+                "password_confirmation"=> ':L}:?{<{H:SPE',
+                "photo_id"=> "some-photo-id",
+                "invitation_code"=> $user->inviteCode->code
+        ];
+        $newUser = User::create($data);
+
+        $defaultStoreInfo = [
+            'user_id' => $newUser->id,
+            'invited_by' => $user->id,
+            'invitation_code' => $user->inviteCode->code,
+            'points' => 0,
+            'points_limit' => 100,
+            'unpaid' => true,
+            'status' => false,
+            'last_redeemed' => now()->subDays(30),
+        ];
+
+        $newStore = StoreInfo::create($defaultStoreInfo);
+        
+        $this->generateInvitationCodeForUser($newUser->id);
+
+        $this->recordInvitation($user->inviteCode->code, $newUser->id);
+        $this->updateStoreInviterInfo($user->id, $newStore->id);
+
+        $this->realtimeEvent();
+        return response()->json(['message' => 'Success']);
+    }
+
+    public function recursiveParentPointPassing(InvitationCode $invitationCode){
+        if($invitationCode->user->storeInfo->invitation_code !== null){
+            $invTable = InvitationCode::where('code', $invitationCode->user->storeInfo->invitation_code)->first();
+            $this->recursiveParentPointPassing($invTable);
+        }
+
+        $invitedUser = InvitedUser::where('user_id', $invitationCode->user->id)->get();
+        $storeAreOpen = $this->checkStatusOfStore($invitedUser);
+        
+        if($storeAreOpen){
+            $weeklyDashboard = WeeklyDashboardMonitoring::first();
+            $weeklyDashboard->company_revenue -= 10;
+            $weeklyDashboard->members_commission += 10;
+            $weeklyDashboard->save();
+
+            $invitationCode->user->storeInfo->points += 10;
+            $invitationCode->user->storeInfo->save();
+        }
+    }
+    public function checkStatusOfStore($invitedUser){
+        if($invitedUser[0]->invited->storeInfo->status === 1 && $invitedUser[1]->invited->storeInfo->status === 1 ){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function realtimeEvent(){
+        
+        $adminController = new AdminController;
+        $isPointingSystemStopped = false;
+        $threshold = 0.9; // threshold for example 90% ganon
+        $totalMembers = $adminController->getTotalMembers();
+        $newMembers = $adminController->getNewMembers();
+        $dailyPackageSales = $adminController->getDailyPackageSales();
+        $dailyProductPurchased = $adminController->getDailyProductPurchased();
+        $openStores = $adminController->getOpenStores();
+        $graduatedStores = $adminController->getGraduatedStores();
+        $dailyMembersCommission = $adminController->getDailyMembersCommission();
+        $dailyCompanyRevenue = $adminController->getDailyCompanyRevenue();
+        $weeklySales = $adminController->getWeeklySales();
+        $weeklyDashboard = $adminController->weeklyDashboard();
+
+        $dashboardData = [
+            'totalMembers' => $totalMembers,
+            'newMembers' => $newMembers,
+            'dailyPackageSales' => $dailyPackageSales,
+            'dailyProductPurchased' => $dailyProductPurchased,
+            'dailyMembersCommission' => $dailyMembersCommission,
+            'dailyCompanyRevenue' => $dailyCompanyRevenue,
+            'openStores' => $openStores,
+            'graduatedStores' => $graduatedStores,
+            'weeklySales' => $weeklySales,
+            'isPointingSystemStopped' => $isPointingSystemStopped,
+            'weeklyDashboard'=>$weeklyDashboard
+        ];
+
+        broadcast(new DashboardUpdated($dashboardData));
+        
+    }
 }
