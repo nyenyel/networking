@@ -4,17 +4,29 @@ import Loading from '../../component/Loading'
 import { formatDate } from '../TransactionOutlet'
 import { useNavigate } from 'react-router-dom'
 import { Box, Modal } from '@mui/material'
+import LoginRedirect from '../../context/LoginRedirect'
+import UserRedirect from '../../context/UserRedirect'
 
 export default function MemberOutlet() {
-  const {apiClient} = useContext(AppContext)
+  const {apiClient, token, user} = useContext(AppContext)
   const navigate = useNavigate()
   const [data, setData] = useState()
+  const [subAccount, setSubAccount] = useState()
+  const [oldMemberForm,setOldMemberForm] = useState()
   const [loading, setLoading] = useState(false)
   const [newMemberForm, setNewMemberForm] =useState()
   const [errorResponse, setErrorResponse] = useState()
   const [invCodeRes, setInvCodeRes] = useState()
   const [modalIsOpen, setModalIsOpen] = useState(false)
   const handleModal = () => setModalIsOpen(!modalIsOpen)
+
+  const [oldMemberModalIsOpen, setOldMemberModalIsOpen] = useState(false)
+  const handleOldMemberModal = () => {
+    setOldMemberModalIsOpen(!oldMemberModalIsOpen)
+    setOldMemberForm({})
+    setSubAccount(null)
+  }
+
   const addNewMember = async () => {
     try{
       setLoading(true)
@@ -26,9 +38,6 @@ export default function MemberOutlet() {
             console.error('Error Response Data:', error.response.data);
             setErrorResponse(error.response.data.errors)
             setInvCodeRes(error.response.data)
-            // if(error.response.data.message){
-            //   console.log(error.response.data)
-            // }
           } else if (error.request) {
             console.error('Error Request:', error.request);
           } else {
@@ -37,6 +46,27 @@ export default function MemberOutlet() {
     } finally {
       setLoading(false)
       console.log(invCodeRes)
+    } 
+  }
+
+  const addNewStore = async () => {
+    try{
+      setLoading(true)
+      const response = await apiClient.post(`api/create-store-v2/${oldMemberForm.user_id}`, oldMemberForm)
+      console.log(response)
+      navigate(0)
+    } catch(error) {
+        if (error.response) {
+            console.error('Error Response Data:', error.response.data);
+            setErrorResponse(error.response.data.errors)
+            setInvCodeRes(error.response.data)
+          } else if (error.request) {
+            console.error('Error Request:', error.request);
+          } else {
+            console.error('Error Message:', error.message);
+          } 
+    } finally {
+      setLoading(false)
     } 
   }
   const handleChange = (e) => {
@@ -48,12 +78,39 @@ export default function MemberOutlet() {
     })
   }
 
+  const handleChangeOldMember = (e) => {
+    const {name, value} = e.target
+    setOldMemberForm({
+        ...oldMemberForm,
+        [name]: value,
+    })
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     // console.log(newMemberForm)
     addNewMember()
   }
 
+  const handleOldSubmit = (e) => {
+    e.preventDefault()
+    addNewStore()
+  }
+
+  const handleSubAccountButton = async () => {
+    try {
+      setLoading(true)
+      const response = await apiClient.post('api/verify-email', oldMemberForm)
+      setSubAccount(response.data.users)
+      setErrorResponse(null)
+      console.log(response.data.users)
+    } catch(error) {
+      console.error('Error: ', error)
+      setErrorResponse(error.response.data.errors)
+    } finally{
+      setLoading(false)
+    }
+  }
   const getUser = async () => {
     try{
       setLoading(true)
@@ -62,7 +119,7 @@ export default function MemberOutlet() {
     } catch(error) {
         if (error.response) {
             console.error('Error Response Data:', error.response.data);
-            setApiResponse(error.response.data.message)
+            setErrorResponse(error.response.data.errors)
             console.log('error msg: ', error.response.data)
           } else if (error.request) {
             console.error('Error Request:', error.request);
@@ -80,6 +137,8 @@ export default function MemberOutlet() {
   return (
     <>
     {loading && <Loading />}
+    {token == null && <LoginRedirect />}
+    {user?.admin != 1 && <UserRedirect />}
     <Modal
         open={modalIsOpen}
         onClose={handleModal}
@@ -203,8 +262,68 @@ export default function MemberOutlet() {
             </form>
         </Box>
     </Modal>
-    <div className='flex flex-row'>
+
+    <Modal
+        open={oldMemberModalIsOpen}
+        onClose={handleOldMemberModal}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+        className="flex w-full z-20 justify-center items-center bg-black bg-opacity-50"
+    >
+        <Box className="bg-white rounded-lg shadow-lg text-def-t p-6">
+            <h3 id="modal-title" className="font-semibold text-xl">Add Store</h3>
+            <p id="modal-description" className="mb-4">This Popup is for adding a Old Member.</p>
+            <form onSubmit={handleSubmit}>
+              <div className='flex gap-2 flex-col'>
+                <div className='flex flex-col'>
+                  <label className="text-sm">E-mail</label>
+                  <div className='flex gap-2'>
+
+                    <input
+                      type="email"
+                      placeholder="Ex. sampl@gmai.com"
+                      name="email"
+                      onChange={handleChangeOldMember}
+                      className="w-full p-2 rounded-md border-def-t border-opacity-5 border-2"
+                      />
+                      <div onClick={handleSubAccountButton} className='bg-trc flex rounded-md cursor-pointer px-5 text-center content-center text-white p-2'>Verify</div>
+                  </div>
+                  {errorResponse?.email && (
+                      <div className="text-sm text-red-800 text-opacity-60">{ errorResponse.email ||errorResponse.email[0] }</div>
+                  )}
+                </div>
+                {subAccount && (
+                  <div>
+                    <div className='flex flex-col'>
+                      <label className="text-sm">Store Invite from</label>
+                      <select
+                          type="text"
+                          placeholder="Ex. 400"
+                          name="user_id"
+                          defaultValue={1}
+                          onChange={handleChangeOldMember}
+                          className="w-full p-2 rounded-md border-def-t border-opacity-5 border-2"
+                      >
+                        {subAccount?.map((item, index)=>(
+                          <option key={index} value={item?.id}>Store Number: {item?.store_no}</option>
+                        ))}
+                      </select>
+                      {errorResponse?.message && (
+                        <div className="text-sm text-red-800 text-opacity-60">{ errorResponse.message }</div>
+                      )}
+                    </div>
+                    <button onClick={handleOldSubmit} className="bg-trc mt-2 bg-prc rounded-md py-2 w-full text-white">Add</button>
+                  </div>
+
+                )}
+
+              </div>
+            </form>
+        </Box>
+    </Modal>
+    <div className='flex flex-row gap-2'>
       <div onClick={handleModal} className='flex-none bg-trc font-sf-bold text-white p-4 mb-2 rounded-md hover:scale-101 cursor-pointer'>New Member</div>
+      <div onClick={handleOldMemberModal} className='flex-none bg-trc font-sf-bold text-white p-4 mb-2 rounded-md hover:scale-101 cursor-pointer'>Old Member</div>
       <div className='flex-1 w-full'/>
     </div>
     <div className="relative overflow-x-auto shadow-md sm:rounded-lg font-sf">

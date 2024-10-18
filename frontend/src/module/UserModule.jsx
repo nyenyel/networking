@@ -9,7 +9,7 @@ export default function UserModule() {
     useEffect(()=> {
         if(user){
             if(user.admin){
-                setLink(['home', 'genealogy', 'admin'])
+                setLink(['admin'])
             }
         }
     }, [user])

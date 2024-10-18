@@ -5,7 +5,7 @@ import { AppContext } from '../context/AppContext'
 import axios from 'axios'
 
 export default function PublicModule() {
-    const link = ['home', 'service']
+    const link = ['home']
     return (
     <>
         <div className='fixed top-0 left-0 right-0 z-50'>

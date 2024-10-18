@@ -11,6 +11,7 @@ import TransactionOutlet from "../outlet/TransactionOutlet";
 import AdminModule from "../module/AdminModule";
 import DasboardOutlet from "../outlet/admin/DasboardOutlet";
 import MemberOutlet from "../outlet/admin/MemberOutlet";
+import Loading from "../component/Loading";
 
 export const router = createBrowserRouter([
     {
@@ -86,4 +87,8 @@ export const router = createBrowserRouter([
             }
           ]
     },
+    {
+        path:'loading',
+        element: <Loading/>
+    }
 ])

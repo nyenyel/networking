@@ -8,6 +8,15 @@ export default {
   ],
   theme: {
     extend: {
+      keyframes: {
+        reverseSpin: {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(-360deg)' }, // Reverse rotation
+        },
+      },
+      animation: {
+        'reverse-spin': 'reverseSpin 1s linear infinite', // Custom animation
+      },
       colors:{
         dirty: '#f0f0f0',
         src: '#db1212',

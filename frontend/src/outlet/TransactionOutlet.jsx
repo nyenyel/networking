@@ -1,9 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { AppContext } from '../context/AppContext'
 import Loading from '../component/Loading';
+import AdminRedirect from '../context/AdminRedirect';
 
 export default function TransactionOutlet() {
-    const{apiClient} = useContext(AppContext)
+    const{apiClient, user} = useContext(AppContext)
     const [data, setData] = useState()
     const [loading, setLoading] = useState(true);
     useEffect (() => {
@@ -22,6 +23,7 @@ export default function TransactionOutlet() {
     }, [])
 
     if (loading) {
+        {user?.admin == 1 && <AdminRedirect />}
         return <Loading />; // Display a loading indicator
     }
 

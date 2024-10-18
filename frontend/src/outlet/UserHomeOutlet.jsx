@@ -9,20 +9,24 @@ import Loading from '../component/Loading'
 import Descendant from '../cards/Descendant'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Box, Modal } from '@mui/material';
+import AdminRedirect from '../context/AdminRedirect'
+import SubStore from '../cards/SubStore'
 
 
 export default function UserHomeOutlet() {
     const {token, apiClient, user} = useContext(AppContext)
     const [loading, setLoading] = useState(false)
     const [store, setStore] = useState()
+    const [subStore, setSubStore] = useState()
     const [amount, setAmount] = useState()
+    const [redeemablePoint, setReeemablePoints] = useState(0)
     const [apiResponse, setApiResponse] = useState()
     const [modalIsOpen, setModalIsOpen] = useState(false)
     const handleModal = () => setModalIsOpen(!modalIsOpen)
     const redeemPoints = async () => {
         try{
             setLoading(true)
-            const response = await apiClient.post('api/redeem-points', amount)
+            const response = await apiClient.post(`api/redeem-points/${amount?.store_no}`, amount)
             if(response.data.message){
                 setApiResponse(response.data.message)
             }
@@ -32,7 +36,8 @@ export default function UserHomeOutlet() {
         } catch(error) {
             if (error.response) {
                 console.error('Error Response Data:', error.response.data);
-                setApiResponse(error.response.data.message)
+                setApiResponse(error.response.data.errors || error.response.data.message )
+                console.log(error.response.data)
                 console.log('error msg: ', error.response.data.message)
               } else if (error.request) {
                 console.error('Error Request:', error.request);
@@ -43,7 +48,7 @@ export default function UserHomeOutlet() {
             setLoading(false)
         }
     }
-    
+
     const handleChange = (e) => {
         const {name, value} = e.target
         setAmount({
@@ -56,10 +61,13 @@ export default function UserHomeOutlet() {
         redeemPoints()
     }
     const navigate = useNavigate()
-    const genealogy = async () => {
+    const genealogy = async (email) => {
         try{
             setLoading(true)
             const response = await apiClient.get(`api/user/genealogy/${user?.id}`)
+            const subRes = await apiClient.post('api/verify-email', {email: email})
+            setSubStore(sortByStoreNo(subRes.data.users))
+            setReeemablePoints(sumPoints(subRes.data.users))
             setStore(response.data)
             // console.log(response.data)
         } catch (e) {
@@ -70,13 +78,14 @@ export default function UserHomeOutlet() {
     }
     useEffect(()=>{
         if(user?.id){
-            genealogy()
+            genealogy(user.email)
         }
     }, [user?.id])
   return (
     <>
     {loading && <Loading />}
     {token == null && (<LoginRedirect/>)}
+    {user?.admin == 1 && <AdminRedirect />}
     <Modal
         open={modalIsOpen}
         onClose={handleModal}
@@ -98,7 +107,23 @@ export default function UserHomeOutlet() {
                     className="w-full p-2 rounded-md border-def-t border-opacity-5 border-2"
                 />
                 {apiResponse && (
-                    <div className="text-sm text-red-800 text-opacity-60">{apiResponse}</div>
+                    <div className="text-sm text-red-800 text-opacity-60">{apiResponse?.amount || apiResponse}</div>
+                )}
+                <label className="text-sm">Store</label>
+                <br />
+                <select
+                    type="number"
+                    placeholder="Ex. 400"
+                    name="store_no"
+                    onChange={handleChange}
+                    className="w-full p-2 rounded-md border-def-t border-opacity-5 border-2"
+                >
+                    {subStore?.map((item,index) => (
+                        <option key={index} value={item.id}>Store Number: {item?.store_no}</option>
+                    ))}
+                </select>
+                {apiResponse && (
+                    <div className="text-sm text-red-800 text-opacity-60">{apiResponse?.store_no}</div>
                 )}
                 <button type="submit" className="bg-trc mt-2 bg-prc rounded-md py-2 w-full text-white">Redeem</button>
             </form>
@@ -144,9 +169,9 @@ export default function UserHomeOutlet() {
 
         <div className='flex-1 flex flex-col w-full md:w-2/3'>
             <div className='hover:scale-101 cursor-pointer flex-1 flex bg-gradient-to-br from-trc to-white mb-2 content-center rounded-md p-4 drop-shadow text-white'>
-            <div className='flex-1 content-center font-sf-extrabold text-4xl'>
+            <NavLink to={'/sku/genealogy'} className='flex-1 content-center font-sf-extrabold text-4xl'>
                 My Sukikart Partners
-            </div>
+            </NavLink>
             <div className='flex-none content-center'>
                 <img src={suki} alt='suki' className='w-auto h-20'/>
             </div>
@@ -177,49 +202,33 @@ export default function UserHomeOutlet() {
                 </div>
                 <div className='text-text text-opacity-50 flex text-center py-4 text-5xl'>
                     <div className='flex-1'/>
-                    {store?.user.store_info.points} <div className='text-base ml-2'>pts</div>
+                    {redeemablePoint} <div className='text-base ml-2'>pts</div>
                     <div className='flex-1'/>
                 </div>
             </div>
-        <div className='flex-1 flex gap-2 text-white'>
-            <div className='flex-1 bg-white rounded-md  drop-shadow'>
-                <div className='bg-trc p-3 rounded-t-md'>
-                    Avg. Daily Points
-                </div>
-                <div className='text-text text-opacity-50 flex text-center py-4 text-5xl'>
-                    <div className='flex-1'/>
-                    {store?.points.daily} <div className='text-base ml-2'>pts</div>
-                    <div className='flex-1'/>
-                </div>
-            </div>
-            <div className='flex-1 bg-white rounded-md  drop-shadow'>
-                <div className='bg-trc p-3 rounded-t-md'>
-                    Avg. Weekly Points
-                </div>
-                <div className='text-text text-opacity-50 flex text-center py-4 text-5xl'>
-                    <div className='flex-1'/>
-                    {store?.points.weekly} <div className='text-base ml-2'>pts</div>
-                    <div className='flex-1'/>
-                </div>
-            </div>
-        </div>
         
         <div className='mt-5'>
             <div className='mb-2 border-b-2 max-w-96 font-sf-bold text-2xl text-trc border-trc'>
                 My Stores
             </div>
-            <Store data={store}/>
-        </div>
-        <div className='mt-5'>
-            <div className='mb-2 border-b-2 max-w-96 font-sf-bold text-2xl text-trc border-trc'>
-                Descendant Stores
-            </div>
-            {store?.descendants.map((item, index) => (
-                <Descendant key={index} data={item} />
+            {subStore?.map((item, index) => (
+                <SubStore data={item} key={index}/>
             ))}
         </div>
     </div>
     
     </>
   )
+}
+
+const sortByStoreNo = (data) => {
+    return data.sort((a, b) => {
+      return a.store_no - b.store_no;
+    });
+};
+
+const sumPoints = (data) => {
+    return data.reduce((total, store) => {
+        return total + (store.store_info?.points || 0);
+    }, 0);
 }

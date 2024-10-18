@@ -4,6 +4,7 @@ import 'reactflow/dist/style.css';
 import LoginRedirect from '../context/LoginRedirect'
 import { AppContext } from '../context/AppContext'
 import Loading from '../component/Loading'
+import AdminRedirect from '../context/AdminRedirect';
 const nodeBuilding = (data, prevData, pos, layerHeight = 100, offset = 900, siblingOffset = 100) => {
   const nodes = prevData ? [prevData] : [];
 
@@ -15,7 +16,7 @@ const nodeBuilding = (data, prevData, pos, layerHeight = 100, offset = 900, sibl
   let childNodes = [];
 
   data.forEach((item, index) => {
-      const name = `${item?.user?.last_name}, ${item?.user?.first_name} \n ${item?.user?.email}`;
+      const name = `${item?.user?.last_name}, ${item?.user?.first_name} \n ${item?.user?.store_no}`;
       
       // Each node with a label, id, and style
       const node = {
@@ -77,7 +78,19 @@ const edgeBuilding = (source, data, prevData = []) => {
     }
   });
 
-  return edges;
+  return removeDuplicateEdges(edges);
+};
+
+// Function to remove duplicate edges by ID
+const removeDuplicateEdges = (edges) => {
+  const uniqueEdges = {};
+  
+  edges.forEach((edge) => {
+    uniqueEdges[edge.id] = edge; // Use edge ID as key to ensure uniqueness
+  });
+  
+  // Return the values of the uniqueEdges object as an array
+  return Object.values(uniqueEdges);
 };
 
 export default function GenealogyOutlet() {
@@ -137,12 +150,12 @@ export default function GenealogyOutlet() {
       return (
           <>
               {token == null && <LoginRedirect />}
+              {user?.admin == 1 && <AdminRedirect />}
               {loading && <Loading />}
           </>
       );
   }
   // console.log(nodes)
-  console.log(edges)
   return (
     <div className='flex w-full p-4 rounded-md h-screen bg-trc bg-opacity-20'>
         <ReactFlow
