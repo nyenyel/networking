@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Events\DashboardUpdated;
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\InviteUserRequest;
 use App\Http\Resources\UserResource;
@@ -35,7 +37,7 @@ class UserController extends Controller
             return response()->json(['message' => 'User not authenticated.'], 401);
         }
         if($user->admin){
-            $data = User::all();
+            $data = User::where('store_no', 0)->get();
             $data->load(['inviteCode', 'storeInfo']);
             return response()->json($data);
         } else{
@@ -162,7 +164,7 @@ class UserController extends Controller
             $monitoring->company_revenue += 1500;
 
             $monitoring->save();
-
+            $this->realtimeEvent();
             return response()->json([
                 'message' => 'User created successfully',
                 'user' => $user,
@@ -352,7 +354,7 @@ class UserController extends Controller
 
         $daily = $store->points_limit/$daysDifference;
         $weekly = $daily * min($daysDifference, 7);
-        $status = $store->status === 2 ? 'STORE OPEN': 'STORE CLOSE';
+        $status = $store->status === 1 ? 'STORE OPEN': 'STORE CLOSE';
         return [
             'daily' => $daily,
             'weekly' => $weekly,
@@ -445,24 +447,20 @@ class UserController extends Controller
         }
 
         // Fetch the user by email
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->get();
 
         if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
+            return response()->json(['errors' => ['email' =>'User not found']], 404);
         }
 
+        if ($user->count() === 0 ) {
+            return response()->json(['errors' => ['email' => 'User Dont Exist.']], 404);
+        }
         // Retrieve all stores for the user
-        $stores = $user->store_referrer()->get();
-
+        // $stores = $user->store_referrer()->get();
+        $user->load(['storeInfo']);
         return response()->json([
-            'user' => [
-                'id' => $user->id,
-                'email' => $user->email,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'store_count' => $user->store_number,  // Access the store count dynamically
-            ],
-            'stores' => $stores,
+            'users' => $user,
         ]);
     }
 
@@ -567,10 +565,16 @@ class UserController extends Controller
         }
 
         if ($user->inviteCode->used_count >= 2) {
-            return response()->json(['message' => 'Invitation code has already been used 2 times'], 400);
+            return response()->json(['errors' => ['message' => 'Invitation code has already been used 2 times']], 400);
         }
         $user->inviteCode->increment('used_count');
         $counter = $user->inviteCode->used_count;
+
+        $weeklyDashboard = WeeklyDashboardMonitoring::first();
+        $weeklyDashboard->package_sold += 1;
+        $weeklyDashboard->product_purchased += 500;
+        $weeklyDashboard->company_revenue += 1500;
+        $weeklyDashboard->save();
 
         if($counter >= 2){
             $user->storeInfo->status = 1;
@@ -614,7 +618,8 @@ class UserController extends Controller
         $this->recordInvitation($user->inviteCode->code, $newUser->id);
         $this->updateStoreInviterInfo($user->id, $newStore->id);
 
-        return response()->json(['message' => 'Success'], 500);
+        $this->realtimeEvent();
+        return response()->json(['message' => 'Success']);
     }
 
     public function recursiveParentPointPassing(InvitationCode $invitationCode){
@@ -627,6 +632,11 @@ class UserController extends Controller
         $storeAreOpen = $this->checkStatusOfStore($invitedUser);
         
         if($storeAreOpen){
+            $weeklyDashboard = WeeklyDashboardMonitoring::first();
+            $weeklyDashboard->company_revenue -= 10;
+            $weeklyDashboard->members_commission += 10;
+            $weeklyDashboard->save();
+
             $invitationCode->user->storeInfo->points += 10;
             $invitationCode->user->storeInfo->save();
         }
@@ -637,5 +647,39 @@ class UserController extends Controller
         } else {
             return false;
         }
+    }
+
+    public function realtimeEvent(){
+        
+        $adminController = new AdminController;
+        $isPointingSystemStopped = false;
+        $threshold = 0.9; // threshold for example 90% ganon
+        $totalMembers = $adminController->getTotalMembers();
+        $newMembers = $adminController->getNewMembers();
+        $dailyPackageSales = $adminController->getDailyPackageSales();
+        $dailyProductPurchased = $adminController->getDailyProductPurchased();
+        $openStores = $adminController->getOpenStores();
+        $graduatedStores = $adminController->getGraduatedStores();
+        $dailyMembersCommission = $adminController->getDailyMembersCommission();
+        $dailyCompanyRevenue = $adminController->getDailyCompanyRevenue();
+        $weeklySales = $adminController->getWeeklySales();
+        $weeklyDashboard = $adminController->weeklyDashboard();
+
+        $dashboardData = [
+            'totalMembers' => $totalMembers,
+            'newMembers' => $newMembers,
+            'dailyPackageSales' => $dailyPackageSales,
+            'dailyProductPurchased' => $dailyProductPurchased,
+            'dailyMembersCommission' => $dailyMembersCommission,
+            'dailyCompanyRevenue' => $dailyCompanyRevenue,
+            'openStores' => $openStores,
+            'graduatedStores' => $graduatedStores,
+            'weeklySales' => $weeklySales,
+            'isPointingSystemStopped' => $isPointingSystemStopped,
+            'weeklyDashboard'=>$weeklyDashboard
+        ];
+
+        broadcast(new DashboardUpdated($dashboardData));
+        
     }
 }

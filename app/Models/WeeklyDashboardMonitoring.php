@@ -12,6 +12,7 @@ class WeeklyDashboardMonitoring extends Model
     protected $fillable = [
         'package_sold',
         'product_purchased',
-        'company_revenue'
+        'company_revenue',
+        'members_commission'
     ];
 }

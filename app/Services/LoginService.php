@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 
 class LoginService {
     public function checkCredential($data){
-        $user = User::where('email', $data['email'])->first();
+        $user = User::where('email', $data['email'])->where('store_no', 0)->first();
         if(!$user || !Hash::check($data['password'], $user->password)){
             return response()->json(['message' => 'Invalid Credential']);
         }

@@ -70,7 +70,7 @@ class PointsController extends Controller
         //
     }
 
-    public function redeemPoints(ReedemPointsRequest $reedemPointsRequest){
+    public function redeemPoints(ReedemPointsRequest $reedemPointsRequest, User $userStore){
 
         $request = $reedemPointsRequest->validated();
 
@@ -78,14 +78,17 @@ class PointsController extends Controller
 
             DB::beginTransaction();
 
-            if (Carbon::now()->isSaturday()){
-            // if (true){
+            // if (Carbon::now()->isSaturday()){
+            if (true){
 
                 $user = Auth::user();
 
                 // $user = User::where('id', 1)->first(); //for API testing
 
-                $storeInfo = $user->storeInfo;
+                $storeInfo = $userStore->storeInfo;
+                if($storeInfo->points < $request['amount']){
+                    return response()->json(['message' => 'insufficient Points '], 400);
+                }
 
                 if ($storeInfo->last_redeemed && Carbon::parse($storeInfo->last_redeemed)->isSameWeek(now())) {
                     DB::rollBack();

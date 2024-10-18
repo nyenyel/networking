@@ -14,6 +14,7 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
+            'store_no' => $this->store_no,
             'email' => $this->email,
             'invited_users' => InvitedUserResource::collection($this->whenLoaded('user_invitee')),
         ];
