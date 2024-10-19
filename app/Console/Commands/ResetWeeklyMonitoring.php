@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Wallet;
 use App\Models\WeeklyDashboardMonitoring;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class ResetWeeklyMonitoring extends Command
 {
@@ -26,24 +28,32 @@ class ResetWeeklyMonitoring extends Command
      */
     public function handle()
     {
-        $monitoring = WeeklyDashboardMonitoring::where('id', 1)->first();
+        $weekly_monitoring = WeeklyDashboardMonitoring::where('id', 1)->first();
+        $wallet = Wallet::find(1);
 
-        if (!$monitoring) {
-            $this->error('Monitoring record not found.');
+        if (!$weekly_monitoring) {
+            $this->error('Weekly monitoring record not found.');
+            return;
+        }
+        if (!$wallet) {
+            $this->error('Wallet record not found.');
             return;
         }
 
-        $wallet = $monitoring->wallet;
-        $commission = $monitoring->members_commission;
+        DB::transaction(function () use ($weekly_monitoring, $wallet) {
 
-        $monitoring->package_sold = 0;
-        $monitoring->product_purchased = 0;
-        $monitoring->company_revenue = 0;
+            $commission = $weekly_monitoring->members_commission;
 
-        $monitoring->wallet = $wallet + $commission;
-        $monitoring->members_commission = 0;
+            $wallet->increment('wallet', $commission);
 
-        $monitoring->save();
+            $weekly_monitoring->package_sold = 0;
+            $weekly_monitoring->product_purchased = 0;
+            $weekly_monitoring->company_revenue = 0;
+            $weekly_monitoring->members_commission = 0;
+
+            $weekly_monitoring->save();
+
+        });
 
         $this->info('Weekly fields have been reset successfully.');
     }

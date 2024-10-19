@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Str;
+use  Illuminate\Support\Str;
 
 use function Pest\Laravel\json;
 
@@ -157,7 +157,7 @@ class UserController extends Controller
             // Generate and save the unique invitation code for the new user
             $newInvitationCode = $this->generateInvitationCodeForUser($user->id);
 
-            $monitoring = WeeklyDashboardMonitoring::where('id', 1)->first();
+        $monitoring = WeeklyDashboardMonitoring::where('id', 2)->first(); //daily
 
             $monitoring->package_sold += 1;
             $monitoring->product_purchased += 500;
@@ -289,7 +289,7 @@ class UserController extends Controller
     {
         // get  inviter of the current user
         $inviterStoreInfo = StoreInfo::where('user_id', $userId)->first();
-        $monitoring = WeeklyDashboardMonitoring::where('id', 1)->first();
+        $monitoring = WeeklyDashboardMonitoring::where('id', 2)->first(); //daily
 
         if ($inviterStoreInfo) {
             $parentId = $inviterStoreInfo->invited_by;
