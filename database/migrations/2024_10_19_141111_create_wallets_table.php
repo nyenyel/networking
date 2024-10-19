@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('weekly_dashboard_monitorings', function (Blueprint $table) {
+        Schema::create('wallets', function (Blueprint $table) {
             $table->id();
-            $table->integer('package_sold')->default(0);
-            $table->decimal('product_purchased', 10, 2)->default(0);
-            $table->decimal('company_revenue', 10, 2)->default(0);
-            $table->decimal('members_commission', 10, 2)->default(0); //redeemable
+            $table->decimal('wallet', 10, 2)->default(0);
             $table->timestamps();
         });
     }
@@ -26,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('weekly_dashboard_monitorings');
+        Schema::dropIfExists('wallets');
     }
 };

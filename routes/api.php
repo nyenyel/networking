@@ -28,6 +28,8 @@ Route::post('/redeem-points', [PointsController::class, 'redeemPoints'])->middle
 Route::get('/transaction', [TransactionController::class, 'transaction'])->middleware('auth:sanctum');
 Route::get('user/genealogy/{id}', [UserController::class, 'getGenealogy']);
 Route::get('/user/{id}/with-invites', [UserController::class, 'getUserWithInvites']);
+Route::patch('/transaction-approve/{id}', [AdminController::class, 'approveRedeemRequest']);
+Route::patch('/transaction-reject/{id}', [AdminController::class, 'rejectRedeemRequest']);
 
 Route::prefix('admin')->group(function () {
     Route::apiResource('user', UserController::class)->only('index')->middleware('auth:sanctum');

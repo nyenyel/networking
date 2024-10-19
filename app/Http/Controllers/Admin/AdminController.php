@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\User\StoreInfo;
 use App\Models\User\Transaction;
+use App\Models\WeeklyDashboardMonitoring;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -111,5 +112,34 @@ class AdminController extends Controller
     {
         return StoreInfo::whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
             ->count() * 5000;
+    }
+
+    public function approveRedeemRequest($id)
+    {
+        DB::transaction(function () use($id) {
+            $redeemRequest = Transaction::findOrFail($id);
+            $weeklyrecord = WeeklyDashboardMonitoring::findOrFail(1);
+            $user = User::findOrFail($redeemRequest->user_id);
+            $store_info = $user->storeInfo;
+
+            $redeemRequest->update([
+                'status'=>1
+            ]);
+
+            $store_info->decrement('points', $redeemRequest->amount);
+            $weeklyrecord->decrement('members_commission', $redeemRequest->amount);
+
+        });
+
+        return response()->json(['message'=>'successfully redeemed']);
+    }
+
+    public function rejectRedeemRequest($id)
+    {
+        $redeemRequest = Transaction::findOrFail($id);
+        $redeemRequest->update([
+            'status'=>2
+        ]);
+        return response()->json(['message'=>'request rejected']);
     }
 }
