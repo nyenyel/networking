@@ -259,6 +259,7 @@ class UserController extends Controller
         // Get the store info using the provided store ID
         $inviterStoreInfo = StoreInfo::find($invitingStoreId);
 
+
         if ($inviterStoreInfo) {
             $parentId = $inviterStoreInfo->invited_by;
 
@@ -569,11 +570,24 @@ class UserController extends Controller
                 ->first();
 
             if ($firstOpenedStore) {
+
+                if($firstOpenedStore->daily_points_timestamp == Carbon::today() && $firstOpenedStore->is_reached){
+                    return response()->json(['message'=>'Daily limit reached']);
+                }
+
                 $firstOpenedStore->points += 10;
                 $firstOpenedStore->points_limit += 10;
+                $firstOpenedStore->points_today += 10;
                 $monitoring->members_commission += 10;
+
+                $firstOpenedStore->daily_points_timestamp = Carbon::today();
+
                 $firstOpenedStore->save();
                 $monitoring->save();
+
+                if($firstOpenedStore->points_today >= 500 ){
+                    $firstOpenedStore->is_reached = 1;
+                }
 
                 if ($firstOpenedStore->points_limit >= 5000) {
                     $firstOpenedStore->status = 3; // graduate
@@ -686,23 +700,46 @@ class UserController extends Controller
                                 ->get();
         $dailyMonitoring = WeeklyDashboardMonitoring::where('id', 2)->first();
         $setting = Setting::where('id', 1)->first();
+
         $specialIsOpen = $setting->special_feature;
         foreach ($sequencesBefore as $sequence){
             if(!$specialIsOpen && $setting->level === $setting->level_counter){
-                $sequence->userBefore->storeInfo->points += 10;
-                $sequence->userBefore->storeInfo->save();
-                $dailyMonitoring->members_commission += 10;
-                $dailyMonitoring->company_revenue -= 10;
-                $dailyMonitoring->save();
-                $setting->level_counter = 1;
-                $setting->save();
-            } else {
-                if($setting->level !== $setting->level_counter){
+
+                if($sequence->userBefore->storeInfo->daily_points_timestamp->isSameDay(now())  && $sequence->userBefore->storeInfo->is_reached)
+                {
+                    //do nothing
+                    // return response()->json(['message'=>'Daily 500 points received']);
+                } else
+                {
+                    $sequence->userBefore->storeInfo->points += 10;
+                    $sequence->userBefore->storeInfo->points_today += 10;
+
+                    $sequence->userBefore->storeInfo->daily_points_timestamp = now();
+
+                    $sequence->userBefore->storeInfo->save();
+
+                    if($sequence->userBefore->storeInfo->points_today >= 500 ){
+                        $sequence->userBefore->storeInfo->is_reached = 1;
+                        $sequence->userBefore->storeInfo->points_today = 0;
+                        $sequence->userBefore->storeInfo->save();
+                    }
+
+                    $dailyMonitoring->members_commission += 10;
+                    $dailyMonitoring->company_revenue -= 10;
+                    $dailyMonitoring->save();
+                    $setting->level_counter = 1;
+                    $setting->save();
+                }
+
+            } else
+            {
+                if($setting->level !== $setting->level_counter)
+                {
                     $setting->level_counter += 1;
                     $setting->save();
                 }
             }
-            
+
         }
     }
 
