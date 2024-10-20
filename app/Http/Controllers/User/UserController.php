@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\InviteUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Sequence;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\User\InvitationCode;
 use App\Models\User\InvitedUser;
@@ -684,12 +685,24 @@ class UserController extends Controller
                                 })
                                 ->get();
         $dailyMonitoring = WeeklyDashboardMonitoring::where('id', 2)->first();
+        $setting = Setting::where('id', 1)->first();
+        $specialIsOpen = $setting->special_feature;
         foreach ($sequencesBefore as $sequence){
-            $sequence->userBefore->storeInfo->points += 10;
-            $sequence->userBefore->storeInfo->save();
-            $dailyMonitoring->members_commission += 10;
-            $dailyMonitoring->company_revenue -= 10;
-            $dailyMonitoring->save();
+            if(!$specialIsOpen && $setting->level === $setting->level_counter){
+                $sequence->userBefore->storeInfo->points += 10;
+                $sequence->userBefore->storeInfo->save();
+                $dailyMonitoring->members_commission += 10;
+                $dailyMonitoring->company_revenue -= 10;
+                $dailyMonitoring->save();
+                $setting->level_counter = 1;
+                $setting->save();
+            } else {
+                if($setting->level !== $setting->level_counter){
+                    $setting->level_counter += 1;
+                    $setting->save();
+                }
+            }
+            
         }
     }
 
