@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Events\DashboardUpdated;
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\User\StoreInfo;
 use App\Models\User\Transaction;
@@ -39,7 +40,7 @@ class AdminController extends Controller
 
         // Logic to check pointing system status
         $isPointingSystemStopped = false;
-        $threshold = 0.9; // Threshold set to 90%
+        $threshold = 0.5; // Threshold set to 90%
 
         if ($dailyMembersCommission >= $threshold * $dailyCompanyRevenue) {
             $isPointingSystemStopped = true;
@@ -154,5 +155,12 @@ class AdminController extends Controller
     }
     public function weeklyDashboard(){
         return WeeklyDashboardMonitoring::where('id', 2)->first();
+    }
+
+    public function updateSpecial(){
+        $setting = Setting::where('id', 1)->first();
+        $setting->special_feature = !$setting->special_feature;
+        $setting->save();
+        return response()->json(['message' => 'updated']);
     }
 }

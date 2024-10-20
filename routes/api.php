@@ -44,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::prefix('admin')->group(function () {
     Route::apiResource('user', UserController::class)->only('index')->middleware('auth:sanctum');
     Route::get('dashboard', [AdminController::class, 'showDashboard'])->middleware('auth:sanctum');
+    Route::put('update', [AdminController::class, 'updateSpecial'])->middleware('auth:sanctum');
 });
 
 Route::post('/broadcasting/auth', [BroadcastController::class, 'authenticate']);
