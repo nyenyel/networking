@@ -17,61 +17,64 @@ use Illuminate\Support\Facades\DB;
 class AdminController extends Controller
 {
     public function showDashboard()
-{
-    // Authenticate user
-    $user = Auth::user();
-    if (!$user) {
-        return response()->json(['message' => 'User not authenticated.'], 401);
-    }
-
-    // Check if user is an admin
-    if ($user->admin) {
-        // Fetch data for the dashboard
-        $totalMembers = $this->getTotalMembers();
-        $newMembers = $this->getNewMembers();
-        $dailyPackageSales = $this->getDailyPackageSales();
-        $dailyProductPurchased = $this->getDailyProductPurchased();
-        $openStores = $this->getOpenStores();
-        $graduatedStores = $this->getGraduatedStores();
-        $dailyMembersCommission = $this->getDailyMembersCommission();
-        $dailyCompanyRevenue = $this->getDailyCompanyRevenue();
-        $weeklySales = $this->getWeeklySales();
-        $weeklyDashboard = $this->weeklyDashboard();
-
-        // Logic to check pointing system status
-        $isPointingSystemStopped = false;
-        $threshold = 0.5; // Threshold set to 90%
-
-        if ($dailyMembersCommission >= $threshold * $dailyCompanyRevenue) {
-            $isPointingSystemStopped = true;
-            // Optional: Logic to stop the pointing system
-            // StoreInfo::update(['pointing_system_status' => 'stopped']);
+    {
+        // Authenticate user
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'User not authenticated.'], 401);
         }
 
-        // Prepare the dashboard data array
-        $dashboardData = [
-            'totalMembers' => $totalMembers,
-            'newMembers' => $newMembers,
-            'dailyPackageSales' => $dailyPackageSales,
-            'dailyProductPurchased' => $dailyProductPurchased,
-            'dailyMembersCommission' => $dailyMembersCommission,
-            'dailyCompanyRevenue' => $dailyCompanyRevenue,
-            'openStores' => $openStores,
-            'graduatedStores' => $graduatedStores,
-            'weeklySales' => $weeklySales,
-            'isPointingSystemStopped' => $isPointingSystemStopped,
-            'weeklyDashboard' => $weeklyDashboard,
-        ];
+        // Check if user is an admin
+        if ($user->admin) {
+            // Fetch data for the dashboard
+            $totalMembers = $this->getTotalMembers();
+            $newMembers = $this->getNewMembers();
+            $dailyPackageSales = $this->getDailyPackageSales();
+            $dailyProductPurchased = $this->getDailyProductPurchased();
+            $openStores = $this->getOpenStores();
+            $graduatedStores = $this->getGraduatedStores();
+            $dailyMembersCommission = $this->getDailyMembersCommission();
+            $dailyCompanyRevenue = $this->getDailyCompanyRevenue();
+            $weeklySales = $this->getWeeklySales();
+            $weeklyDashboard = $this->weeklyDashboard();
 
-        // Broadcast the updated dashboard data
-        broadcast(new DashboardUpdated($dashboardData));
+            // Logic to check pointing system status
+            $isPointingSystemStopped = false;
+            $threshold = 0.5; // Threshold set to 90%
 
-        // Return the dashboard data as JSON response
-        return response()->json($dashboardData);
-    } else {
-        return response()->json(['message' => 'Unauthorized'], 403);
+            if ($dailyMembersCommission >= $threshold * $dailyCompanyRevenue) {
+                $isPointingSystemStopped = true;
+                $special = Setting::where('id', 1)->first();
+                $special->special_feature = true;
+                $special->save();
+                // Optional: Logic to stop the pointing system
+                // StoreInfo::update(['pointing_system_status' => 'stopped']);
+            }
+
+            // Prepare the dashboard data array
+            $dashboardData = [
+                'totalMembers' => $totalMembers,
+                'newMembers' => $newMembers,
+                'dailyPackageSales' => $dailyPackageSales,
+                'dailyProductPurchased' => $dailyProductPurchased,
+                'dailyMembersCommission' => $dailyMembersCommission,
+                'dailyCompanyRevenue' => $dailyCompanyRevenue,
+                'openStores' => $openStores,
+                'graduatedStores' => $graduatedStores,
+                'weeklySales' => $weeklySales,
+                'isPointingSystemStopped' => $isPointingSystemStopped,
+                'weeklyDashboard' => $weeklyDashboard,
+            ];
+
+            // Broadcast the updated dashboard data
+            broadcast(new DashboardUpdated($dashboardData));
+
+            // Return the dashboard data as JSON response
+            return response()->json($dashboardData);
+        } else {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
     }
-}
 
 
     public function getTotalMembers()
