@@ -465,7 +465,7 @@ class UserController extends Controller
         }
         // Retrieve all stores for the user
         // $stores = $user->store_referrer()->get();
-        $user->load(['storeInfo']);
+        $user->load(['storeInfo', 'inviteCode']);
         return response()->json([
             'users' => $user,
         ]);

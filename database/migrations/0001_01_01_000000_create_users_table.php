@@ -52,7 +52,7 @@ return new class extends Migration
                 'username' => 'superadmin',
                 'admin' => 1,
                 'email' => 'super@admin.com',
-                'password' => bcrypt('4EX}dn{L3{15\`sD3'),
+                'password' => bcrypt('sukikart@2024'),
                 'photo_id' => 'default_photo_id',
                 'created_at' => now(),
                 'updated_at' => now(),
