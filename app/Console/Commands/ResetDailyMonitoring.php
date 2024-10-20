@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\WeeklyDashboardMonitoring;
 use Illuminate\Console\Command;
 
+
 class ResetDailyMonitoring extends Command
 {
     /**
@@ -28,6 +29,7 @@ class ResetDailyMonitoring extends Command
     {
         $monitoring = WeeklyDashboardMonitoring::where('id', 2)->first();
         $weeklyMonitoring = WeeklyDashboardMonitoring::find(1);
+        
 
         if (!$monitoring || !$weeklyMonitoring) {
             $this->error('Required monitoring record(s) not found.');

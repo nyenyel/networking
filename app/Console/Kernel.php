@@ -11,7 +11,7 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('app:reset-daily-monitoring')->dailyAt('05:00');
+        $schedule->command('app:reset-daily-monitoring')->everyMinute();
     }
 
     protected function commands()
