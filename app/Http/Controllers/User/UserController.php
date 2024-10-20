@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\InviteUserRequest;
 use App\Http\Resources\UserResource;
+use App\Models\Sequence;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\User\InvitationCode;
 use App\Models\User\InvitedUser;
@@ -20,7 +22,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Str;
+use  Illuminate\Support\Str;
 
 use function Pest\Laravel\json;
 
@@ -157,7 +159,7 @@ class UserController extends Controller
             // Generate and save the unique invitation code for the new user
             $newInvitationCode = $this->generateInvitationCodeForUser($user->id);
 
-            $monitoring = WeeklyDashboardMonitoring::where('id', 1)->first();
+            $monitoring = WeeklyDashboardMonitoring::where('id', 2)->first(); //daily
 
             $monitoring->package_sold += 1;
             $monitoring->product_purchased += 500;
@@ -218,10 +220,14 @@ class UserController extends Controller
 
             // Update status to 2 if 2 users have been invited
             if ($inviterStoreInfo->invited_users_count >= 2) {
-                $inviterStoreInfo->status = 2;
+                $inviterStoreInfo->status = 1;
                 $inviterStoreInfo->save();
-
-                $this->passPointsToParentStore($invitedById);
+                $newSequence = Sequence::create([
+                    'current_user_id' => $invitedById,
+                    'before_user_id' => $invitedById
+                ]);
+                $this->sequencePassing($newSequence);
+                // $this->passPointsToFirstOpenedStore($invitedById);
             }
         }
     }
@@ -252,6 +258,7 @@ class UserController extends Controller
     {
         // Get the store info using the provided store ID
         $inviterStoreInfo = StoreInfo::find($invitingStoreId);
+
 
         if ($inviterStoreInfo) {
             $parentId = $inviterStoreInfo->invited_by;
@@ -289,7 +296,7 @@ class UserController extends Controller
     {
         // get  inviter of the current user
         $inviterStoreInfo = StoreInfo::where('user_id', $userId)->first();
-        $monitoring = WeeklyDashboardMonitoring::where('id', 1)->first();
+        $monitoring = WeeklyDashboardMonitoring::where('id', 2)->first(); //daily
 
         if ($inviterStoreInfo) {
             $parentId = $inviterStoreInfo->invited_by;
@@ -473,9 +480,7 @@ class UserController extends Controller
             // Di na kailangan this kasi pasa nalang natin yung user since maayos naman yung relationship ng  dtb natin
             // yung user kasi connected naman na siya sa store_info, invitation_code
             //**********************/
-
-            
-            // 'invitation_code' => 'nullable|string', 
+            // 'invitation_code' => 'nullable|string',
             // 'inviting_store_id' => 'nullable|exists:store_infos,id', // Store ID of the inviter's store
         ]);
 
@@ -535,7 +540,7 @@ class UserController extends Controller
             $this->updateStoreInviterInfo($invitedById, $invitingStoreId);
 
             // Pass points to all ancestors of the user who invited the current user
-            $this->passPointsToParentStore($invitedById);
+            $this->passPointsToFirstOpenedStore($invitedById);
         }
 
         // Generate and save the unique invitation code for the new user
@@ -554,6 +559,50 @@ class UserController extends Controller
         ], 201);
     }
 
+    protected function passPointsToFirstOpenedStore($userId)
+    {
+        $inviterStoreInfo = StoreInfo::where('user_id', $userId)->first();
+        $monitoring = WeeklyDashboardMonitoring::where('id', 2)->first();
+
+        if ($inviterStoreInfo) {
+            $firstOpenedStore = StoreInfo::where('invited_by', $inviterStoreInfo->invited_by)
+                ->orderBy('created_at', 'asc') // Get the earliest store opened
+                ->first();
+
+            if ($firstOpenedStore) {
+
+                if($firstOpenedStore->daily_points_timestamp == Carbon::today() && $firstOpenedStore->is_reached){
+                    return response()->json(['message'=>'Daily limit reached']);
+                }
+
+                $firstOpenedStore->points += 10;
+                $firstOpenedStore->points_limit += 10;
+                $firstOpenedStore->points_today += 10;
+                $monitoring->members_commission += 10;
+
+                $firstOpenedStore->daily_points_timestamp = Carbon::today();
+
+                $firstOpenedStore->save();
+                $monitoring->save();
+
+                if($firstOpenedStore->points_today >= 500 ){
+                    $firstOpenedStore->is_reached = 1;
+                }
+
+                if ($firstOpenedStore->points_limit >= 5000) {
+                    $firstOpenedStore->status = 3; // graduate
+                    $firstOpenedStore->save();
+
+                    StoreInfo::where('invited_by', $firstOpenedStore->user_id)
+                        ->update(['invited_by' => null]);
+                }
+
+                $this->passPointsToFirstOpenedStore($firstOpenedStore->user_id);
+            }
+        }
+    }
+
+
 
     public function createStoreV2(Request $request, User $user){
         $validator = Validator::make($request->all(), [
@@ -570,19 +619,27 @@ class UserController extends Controller
         $user->inviteCode->increment('used_count');
         $counter = $user->inviteCode->used_count;
 
-        $weeklyDashboard = WeeklyDashboardMonitoring::first();
+        $dailyDashboard = WeeklyDashboardMonitoring::where('id', 2)->first();
+        $weeklyDashboard = WeeklyDashboardMonitoring::where('id', 1)->first();
+
         $weeklyDashboard->package_sold += 1;
         $weeklyDashboard->product_purchased += 500;
         $weeklyDashboard->company_revenue += 1500;
         $weeklyDashboard->save();
 
+        $dailyDashboard->package_sold += 1;
+        $dailyDashboard->product_purchased += 500;
+        $dailyDashboard->company_revenue += 1500;
+        $dailyDashboard->save();
+
         if($counter >= 2){
             $user->storeInfo->status = 1;
             $user->storeInfo->save();
-            if($user->storeInfo->invitation_code !== null){
-                $invTable = InvitationCode::where('code', $user->storeInfo->invitation_code)->first();
-                $this->recursiveParentPointPassing($invTable);
-            }
+            $newSequence = Sequence::create([
+                'current_user_id' => $user->id,
+                'before_user_id' => $user->id,
+            ]);
+            $this->sequencePassing($newSequence);
         }
 
         $noOfStore = User::where('email', $user->email)->count();
@@ -612,7 +669,7 @@ class UserController extends Controller
         ];
 
         $newStore = StoreInfo::create($defaultStoreInfo);
-        
+
         $this->generateInvitationCodeForUser($newUser->id);
 
         $this->recordInvitation($user->inviteCode->code, $newUser->id);
@@ -630,7 +687,7 @@ class UserController extends Controller
 
         $invitedUser = InvitedUser::where('user_id', $invitationCode->user->id)->get();
         $storeAreOpen = $this->checkStatusOfStore($invitedUser);
-        
+
         if($storeAreOpen){
             $weeklyDashboard = WeeklyDashboardMonitoring::first();
             $weeklyDashboard->company_revenue -= 10;
@@ -641,6 +698,62 @@ class UserController extends Controller
             $invitationCode->user->storeInfo->save();
         }
     }
+
+    public function sequencePassing(Sequence $newSequence)
+    {
+        $sequencesBefore = Sequence::where('id', '<', $newSequence->id)
+            ->whereHas('userBefore', function ($query) {
+                $query->where('admin', false);
+            })
+            ->get();
+
+        $dailyMonitoring = WeeklyDashboardMonitoring::where('id', 2)->first();
+        $setting = Setting::where('id', 1)->first();
+
+        $specialIsOpen = $setting->special_feature;
+
+        foreach ($sequencesBefore as $sequence) {
+            $storeInfo = $sequence->userBefore->storeInfo;
+
+            // Ensure daily_points_timestamp is a Carbon instance
+            $dailyPointsTimestamp = Carbon::parse($storeInfo->daily_points_timestamp);
+
+            if (!$specialIsOpen && $setting->level === $setting->level_counter) {
+                if ($dailyPointsTimestamp->isSameDay(now()) && $storeInfo->is_reached) {
+                    // Do nothing
+                } else {
+                    $storeInfo->points += 10;
+                    $storeInfo->points_today += 10;
+                    $storeInfo->daily_points_timestamp = now();
+                    $storeInfo->save();
+
+                    if ($storeInfo->points_today >= 500) {
+                        $storeInfo->is_reached = 1;
+                        $storeInfo->save();
+                    }
+
+                    if ($dailyPointsTimestamp != $dailyPointsTimestamp->isSameDay(now()))
+                    {
+                        $storeInfo->is_reached = 0;
+                        $storeInfo->points_today = 0;
+                        $storeInfo->save();
+                    }
+
+                    $dailyMonitoring->members_commission += 10;
+                    $dailyMonitoring->company_revenue -= 10;
+                    $dailyMonitoring->save();
+                    $setting->level_counter = 1;
+                    $setting->save();
+                }
+            } else {
+                if ($setting->level !== $setting->level_counter) {
+                    $setting->level_counter += 1;
+                    $setting->save();
+                }
+            }
+        }
+    }
+
     public function checkStatusOfStore($invitedUser){
         if($invitedUser[0]->invited->storeInfo->status === 1 && $invitedUser[1]->invited->storeInfo->status === 1 ){
             return true;
@@ -650,7 +763,7 @@ class UserController extends Controller
     }
 
     public function realtimeEvent(){
-        
+
         $adminController = new AdminController;
         $isPointingSystemStopped = false;
         $threshold = 0.9; // threshold for example 90% ganon
@@ -680,6 +793,6 @@ class UserController extends Controller
         ];
 
         broadcast(new DashboardUpdated($dashboardData));
-        
+
     }
 }

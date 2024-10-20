@@ -32,9 +32,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/create-store-v2/{user}', [UserController::class, 'createStoreV2']);
 });
 
+//API for testing
+// Route::post('/test-invite-user', [UserController::class, 'AddUser']);
+// Route::post('/redeem-points', [PointsController::class, 'redeemPoints'])->middleware('auth:sanctum');
+// Route::get('/transaction', [TransactionController::class, 'transaction'])->middleware('auth:sanctum');
+// Route::get('user/genealogy/{id}', [UserController::class, 'getGenealogy']);
+// Route::get('/user/{id}/with-invites', [UserController::class, 'getUserWithInvites']);
+// Route::patch('/transaction-approve/{id}', [AdminController::class, 'approveRedeemRequest']);
+// Route::patch('/transaction-reject/{id}', [AdminController::class, 'rejectRedeemRequest']);
+
 Route::prefix('admin')->group(function () {
     Route::apiResource('user', UserController::class)->only('index')->middleware('auth:sanctum');
     Route::get('dashboard', [AdminController::class, 'showDashboard'])->middleware('auth:sanctum');
+    Route::put('update', [AdminController::class, 'updateSpecial'])->middleware('auth:sanctum');
 });
 
 Route::post('/broadcasting/auth', [BroadcastController::class, 'authenticate']);

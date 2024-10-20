@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Events\DashboardUpdated;
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\User\StoreInfo;
 use App\Models\User\Transaction;
@@ -39,7 +40,7 @@ class AdminController extends Controller
 
         // Logic to check pointing system status
         $isPointingSystemStopped = false;
-        $threshold = 0.9; // Threshold set to 90%
+        $threshold = 0.5; // Threshold set to 90%
 
         if ($dailyMembersCommission >= $threshold * $dailyCompanyRevenue) {
             $isPointingSystemStopped = true;
@@ -85,7 +86,7 @@ class AdminController extends Controller
 
     public function getDailyPackageSales()
     {
-        return StoreInfo::whereDate('created_at', Carbon::today())->count() * 5000;
+        return StoreInfo::whereDate('created_at', Carbon::today())->count() * 2000;
     }
 
     public function getDailyProductPurchased()
@@ -110,7 +111,7 @@ class AdminController extends Controller
 
     public function getOpenStores()
     {
-        return StoreInfo::where('status', 2)->count();
+        return StoreInfo::where('status', 1)->count();
     }
 
     public function getGraduatedStores()
@@ -123,7 +124,43 @@ class AdminController extends Controller
         return StoreInfo::whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
             ->count() * 5000;
     }
+
+    public function approveRedeemRequest($id)
+    {
+        DB::transaction(function () use($id) {
+            $redeemRequest = Transaction::findOrFail($id);
+            $weeklyrecord = WeeklyDashboardMonitoring::findOrFail(1);
+            $user = User::findOrFail($redeemRequest->user_id);
+            $store_info = $user->storeInfo;
+
+            $redeemRequest->update([
+                'status'=>1
+            ]);
+
+            $store_info->decrement('points', $redeemRequest->amount);
+            $weeklyrecord->decrement('members_commission', $redeemRequest->amount);
+
+        });
+
+        return response()->json(['message'=>'successfully redeemed']);
+    }
+
+    public function rejectRedeemRequest($id)
+    {
+        $redeemRequest = Transaction::findOrFail($id);
+        $redeemRequest->update([
+            'status'=>2
+        ]);
+        return response()->json(['message'=>'request rejected']);
+    }
     public function weeklyDashboard(){
-        return WeeklyDashboardMonitoring::first();
+        return WeeklyDashboardMonitoring::where('id', 2)->first();
+    }
+
+    public function updateSpecial(){
+        $setting = Setting::where('id', 1)->first();
+        $setting->special_feature = !$setting->special_feature;
+        $setting->save();
+        return response()->json(['message' => 'updated']);
     }
 }
