@@ -158,14 +158,19 @@ class UserController extends Controller
 
             // Generate and save the unique invitation code for the new user
             $newInvitationCode = $this->generateInvitationCodeForUser($user->id);
+            $weeklyMonitoring = WeeklyDashboardMonitoring::where('id', 1)->first(); //weekly
 
             $monitoring = WeeklyDashboardMonitoring::where('id', 2)->first(); //daily
 
             $monitoring->package_sold += 1;
             $monitoring->product_purchased += 500;
             $monitoring->company_revenue += 1500;
-
             $monitoring->save();
+
+            $weeklyMonitoring->package_sold += 1;
+            $weeklyMonitoring->product_purchased += 500;
+            $weeklyMonitoring->company_revenue += 1500;
+            $weeklyMonitoring->save();
             $this->realtimeEvent();
             return response()->json([
                 'message' => 'User created successfully',

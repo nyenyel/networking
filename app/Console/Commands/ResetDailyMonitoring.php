@@ -26,7 +26,7 @@ class ResetDailyMonitoring extends Command
      */
     public function handle()
     {
-        $monitoring = WeeklyDashboardMonitoring::find(2);
+        $monitoring = WeeklyDashboardMonitoring::where('id', 2)->first();
         $weeklyMonitoring = WeeklyDashboardMonitoring::find(1);
 
         if (!$monitoring || !$weeklyMonitoring) {
@@ -34,12 +34,10 @@ class ResetDailyMonitoring extends Command
             return;
         }
 
-        $monitoring->update([
-            'package_sold' => 0,
-            'product_purchased' => 0,
-            'company_revenue' => 0,
-            'members_commission' => 0,
-        ]);
+        $monitoring->package_sold = 0;
+        $monitoring->product_purchased = 0;
+        $monitoring->company_revenue = 0;
+        $monitoring->save();
 
         $this->info('Daily fields have been reset successfully.');
     }
