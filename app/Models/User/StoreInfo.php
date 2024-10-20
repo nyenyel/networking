@@ -20,6 +20,15 @@ class StoreInfo extends Model
         'unpaid',
         'status',
         'invited_users_count',
+        'daily_points_timestamp',
+        'today_points',
+        'is_reached',
+    ];
+
+    protected $casts = [
+        'daily_points_timestamp' => 'datetime',
+        'last_redeemed' => 'datetime',
+        'is_reached' => 'boolean',
     ];
 
     public function user()

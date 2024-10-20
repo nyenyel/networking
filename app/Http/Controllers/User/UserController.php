@@ -699,34 +699,44 @@ class UserController extends Controller
         }
     }
 
-    public function sequencePassing(Sequence $newSequence){
+    public function sequencePassing(Sequence $newSequence)
+    {
         $sequencesBefore = Sequence::where('id', '<', $newSequence->id)
-                                ->whereHas('userBefore', function ($query) {
-                                    $query->where('admin', false);
-                                })
-                                ->get();
+            ->whereHas('userBefore', function ($query) {
+                $query->where('admin', false);
+            })
+            ->get();
+
         $dailyMonitoring = WeeklyDashboardMonitoring::where('id', 2)->first();
         $setting = Setting::where('id', 1)->first();
 
         $specialIsOpen = $setting->special_feature;
-        foreach ($sequencesBefore as $sequence){
-            if(!$specialIsOpen && $setting->level === $setting->level_counter){
 
-                if($sequence->userBefore->storeInfo->daily_points_timestamp->isSameDay(now()) && $sequence->userBefore->storeInfo->is_reached)
-                {
-                    //do nothing
-                    // return response()->json(['message'=>'Daily 500 points received']);
-                } else
-                {
-                    $sequence->userBefore->storeInfo->points += 10;
-                    $sequence->userBefore->storeInfo->points_today += 10;
-                    $sequence->userBefore->storeInfo->daily_points_timestamp = now();
+        foreach ($sequencesBefore as $sequence) {
+            $storeInfo = $sequence->userBefore->storeInfo;
 
-                    $sequence->userBefore->storeInfo->save();
+            // Ensure daily_points_timestamp is a Carbon instance
+            $dailyPointsTimestamp = Carbon::parse($storeInfo->daily_points_timestamp);
 
-                    if($sequence->userBefore->storeInfo->points_today >= 500 ){
-                        $sequence->userBefore->storeInfo->is_reached = 1;
-                        $sequence->userBefore->storeInfo->save();
+            if (!$specialIsOpen && $setting->level === $setting->level_counter) {
+                if ($dailyPointsTimestamp->isSameDay(now()) && $storeInfo->is_reached) {
+                    // Do nothing
+                } else {
+                    $storeInfo->points += 10;
+                    $storeInfo->points_today += 10;
+                    $storeInfo->daily_points_timestamp = now();
+                    $storeInfo->save();
+
+                    if ($storeInfo->points_today >= 500) {
+                        $storeInfo->is_reached = 1;
+                        $storeInfo->save();
+                    }
+
+                    if ($dailyPointsTimestamp != $dailyPointsTimestamp->isSameDay(now()))
+                    {
+                        $storeInfo->is_reached = 0;
+                        $storeInfo->points_today = 0;
+                        $storeInfo->save();
                     }
 
                     $dailyMonitoring->members_commission += 10;
@@ -735,16 +745,12 @@ class UserController extends Controller
                     $setting->level_counter = 1;
                     $setting->save();
                 }
-
-            } else
-            {
-                if($setting->level !== $setting->level_counter)
-                {
+            } else {
+                if ($setting->level !== $setting->level_counter) {
                     $setting->level_counter += 1;
                     $setting->save();
                 }
             }
-
         }
     }
 
