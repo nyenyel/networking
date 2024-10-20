@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('sequences', function (Blueprint $table) {
             $table->id();
-            $table->double('ranking');
+            $table->double('ranking')->default(0);
             $table->unsignedBigInteger('before_user_id');
             $table->unsignedBigInteger('current_user_id');
             $table->foreign('before_user_id')->references('id')->on('users');

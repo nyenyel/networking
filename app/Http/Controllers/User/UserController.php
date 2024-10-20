@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\InviteUserRequest;
 use App\Http\Resources\UserResource;
+use App\Models\Sequence;
 use App\Models\User;
 use App\Models\User\InvitationCode;
 use App\Models\User\InvitedUser;
@@ -157,7 +158,7 @@ class UserController extends Controller
             // Generate and save the unique invitation code for the new user
             $newInvitationCode = $this->generateInvitationCodeForUser($user->id);
 
-        $monitoring = WeeklyDashboardMonitoring::where('id', 2)->first(); //daily
+            $monitoring = WeeklyDashboardMonitoring::where('id', 2)->first(); //daily
 
             $monitoring->package_sold += 1;
             $monitoring->product_purchased += 500;
@@ -218,10 +219,14 @@ class UserController extends Controller
 
             // Update status to 2 if 2 users have been invited
             if ($inviterStoreInfo->invited_users_count >= 2) {
-                $inviterStoreInfo->status = 2;
+                $inviterStoreInfo->status = 1;
                 $inviterStoreInfo->save();
-
-                $this->passPointsToFirstOpenedStore($invitedById);
+                $newSequence = Sequence::create([
+                    'current_user_id' => $invitedById,
+                    'before_user_id' => $invitedById
+                ]);
+                $this->sequencePassing($newSequence);
+                // $this->passPointsToFirstOpenedStore($invitedById);
             }
         }
     }
@@ -473,8 +478,6 @@ class UserController extends Controller
             // Di na kailangan this kasi pasa nalang natin yung user since maayos naman yung relationship ng  dtb natin
             // yung user kasi connected naman na siya sa store_info, invitation_code
             //**********************/
-
-
             // 'invitation_code' => 'nullable|string',
             // 'inviting_store_id' => 'nullable|exists:store_infos,id', // Store ID of the inviter's store
         ]);
@@ -557,7 +560,7 @@ class UserController extends Controller
     protected function passPointsToFirstOpenedStore($userId)
     {
         $inviterStoreInfo = StoreInfo::where('user_id', $userId)->first();
-        $monitoring = WeeklyDashboardMonitoring::where('id', 1)->first();
+        $monitoring = WeeklyDashboardMonitoring::where('id', 2)->first();
 
         if ($inviterStoreInfo) {
             $firstOpenedStore = StoreInfo::where('invited_by', $inviterStoreInfo->invited_by)
@@ -601,7 +604,7 @@ class UserController extends Controller
         $user->inviteCode->increment('used_count');
         $counter = $user->inviteCode->used_count;
 
-        $weeklyDashboard = WeeklyDashboardMonitoring::first();
+        $weeklyDashboard = WeeklyDashboardMonitoring::where('id', 2)->first();
         $weeklyDashboard->package_sold += 1;
         $weeklyDashboard->product_purchased += 500;
         $weeklyDashboard->company_revenue += 1500;
@@ -610,10 +613,11 @@ class UserController extends Controller
         if($counter >= 2){
             $user->storeInfo->status = 1;
             $user->storeInfo->save();
-            if($user->storeInfo->invitation_code !== null){
-                $invTable = InvitationCode::where('code', $user->storeInfo->invitation_code)->first();
-                $this->recursiveParentPointPassing($invTable);
-            }
+            $newSequence = Sequence::create([
+                'current_user_id' => $user->id,
+                'before_user_id' => $user->id,
+            ]);
+            $this->sequencePassing($newSequence);
         }
 
         $noOfStore = User::where('email', $user->email)->count();
@@ -672,6 +676,23 @@ class UserController extends Controller
             $invitationCode->user->storeInfo->save();
         }
     }
+
+    public function sequencePassing(Sequence $newSequence){
+        $sequencesBefore = Sequence::where('id', '<', $newSequence->id)
+                                ->whereHas('userBefore', function ($query) {
+                                    $query->where('admin', false);
+                                })
+                                ->get();
+        $dailyMonitoring = WeeklyDashboardMonitoring::where('id', 2)->first();
+        foreach ($sequencesBefore as $sequence){
+            $sequence->userBefore->storeInfo->points += 10;
+            $sequence->userBefore->storeInfo->save();
+            $dailyMonitoring->members_commission += 10;
+            $dailyMonitoring->company_revenue -= 10;
+            $dailyMonitoring->save();
+        }
+    }
+
     public function checkStatusOfStore($invitedUser){
         if($invitedUser[0]->invited->storeInfo->status === 1 && $invitedUser[1]->invited->storeInfo->status === 1 ){
             return true;

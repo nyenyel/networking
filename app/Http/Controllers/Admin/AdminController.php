@@ -85,7 +85,7 @@ class AdminController extends Controller
 
     public function getDailyPackageSales()
     {
-        return StoreInfo::whereDate('created_at', Carbon::today())->count() * 5000;
+        return StoreInfo::whereDate('created_at', Carbon::today())->count() * 2000;
     }
 
     public function getDailyProductPurchased()
@@ -110,7 +110,7 @@ class AdminController extends Controller
 
     public function getOpenStores()
     {
-        return StoreInfo::where('status', 2)->count();
+        return StoreInfo::where('status', 1)->count();
     }
 
     public function getGraduatedStores()
@@ -153,6 +153,6 @@ class AdminController extends Controller
         return response()->json(['message'=>'request rejected']);
     }
     public function weeklyDashboard(){
-        return WeeklyDashboardMonitoring::first();
+        return WeeklyDashboardMonitoring::where('id', 2)->first();
     }
 }
