@@ -11,7 +11,7 @@ export default function AppProvider({children}) {
     const prod = 'https://api.sukikart.store/'
     const local = 'http://localhost:8000/'
     const apiClient = axios.create({
-        baseURL: prod,
+        baseURL: local,
         withCredentials: true, 
         headers: {
             'X-XSRF-TOKEN': getCookie('XSRF-TOKEN'),

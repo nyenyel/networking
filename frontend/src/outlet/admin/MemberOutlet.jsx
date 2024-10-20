@@ -102,6 +102,10 @@ export default function MemberOutlet() {
       setLoading(true)
       const response = await apiClient.post('api/verify-email', oldMemberForm)
       setSubAccount(response.data.users)
+      setOldMemberForm({
+        user_id: response.data.users[0].id,
+        email: response.data.users[0].email
+      })
       setErrorResponse(null)
       console.log(response.data.users)
     } catch(error) {
