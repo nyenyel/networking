@@ -10,7 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Str;
+use Illuminate\Support\Str;
 
 class PointsController extends Controller
 {
@@ -78,8 +78,8 @@ class PointsController extends Controller
 
             DB::beginTransaction();
 
-            // if (Carbon::now()->isSaturday()){
-            if (true){
+            if (Carbon::now()->isSaturday()){
+            // if (true){
 
                 $user = Auth::user();
 

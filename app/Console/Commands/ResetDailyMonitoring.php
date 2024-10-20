@@ -37,6 +37,7 @@ class ResetDailyMonitoring extends Command
         $monitoring->package_sold = 0;
         $monitoring->product_purchased = 0;
         $monitoring->company_revenue = 0;
+        $monitoring->members_commission = 0;
         $monitoring->save();
 
         $this->info('Daily fields have been reset successfully.');

@@ -15,7 +15,8 @@ class LibTransactionSeeder extends Seeder
     {
         //
         LibTransaction::upsert([
-            ['id' => '1', 'desc' => 'Points Redeem']
+            ['id' => '1', 'desc' => 'Points Redeem'],
+            ['id' => '2', 'desc' => 'Company Revenue'],
         ],['id']);
     }
 }
