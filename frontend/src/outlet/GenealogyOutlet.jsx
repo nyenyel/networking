@@ -5,57 +5,115 @@ import LoginRedirect from '../context/LoginRedirect'
 import { AppContext } from '../context/AppContext'
 import Loading from '../component/Loading'
 import AdminRedirect from '../context/AdminRedirect';
-const nodeBuilding = (data, prevData, pos, layerHeight = 100, offset = 900, siblingOffset = 100) => {
-  const nodes = prevData ? [prevData] : [];
+// const nodeBuilding = (data, prevData, pos, layerHeight = 100, offset = 900, siblingOffset = 100) => {
+//   const nodes = prevData ? [prevData] : [];
 
-  // Start with the x and y coordinates for positioning
-  let tempX = pos.x ;
-  let baseY = pos.y +100;
+//   // Start with the x and y coordinates for positioning
+//   let tempX = pos.x ;
+//   let baseY = pos.y +100;
 
-  // Array to track horizontal spacing between child nodes
-  let childNodes = [];
+//   // Array to track horizontal spacing between child nodes
+//   let childNodes = [];
 
-  data.forEach((item, index) => {
-      const name = `${item?.user?.last_name}, ${item?.user?.first_name} \n ${item?.user?.store_no}`;
+//   data.forEach((item, index) => {
+//       const name = `${item?.user?.last_name}, ${item?.user?.first_name} \n ${item?.user?.store_no}`;
       
-      // Each node with a label, id, and style
-      const node = {
-          id: `${item?.user?.id}`,
-          position: { x: tempX, y: baseY }, 
-          data: { label: name },
-          style: { backgroundColor: '#FF5722', color: 'white', border: '2px solid #FF9800' },
-          width: 150,
-          height: 42
-      };
+//       // Each node with a label, id, and style
+//       const node = {
+//           id: `${item?.user?.id}`,
+//           position: { x: tempX, y: baseY }, 
+//           data: { label: name },
+//           style: { backgroundColor: '#FF5722', color: 'white', border: '2px solid #FF9800' },
+//           width: 150,
+//           height: 42
+//       };
       
-      // Add current node to the list of child nodes
-      childNodes.push(node);
-      tempX += node.width + siblingOffset; // Adjust horizontal position for siblings
+//       // Add current node to the list of child nodes
+//       childNodes.push(node);
+//       tempX += node.width + siblingOffset; // Adjust horizontal position for siblings
 
-      // If invited users exist, recursively create nodes for them
-      if (item?.user?.invited_users && item?.user?.invited_users.length !== 0) {
-          // Adjust x position so child nodes are centered under parent node
-          const childPos = { x: tempX - node.width / 2, y: baseY + layerHeight };
-          const invitedNodes = nodeBuilding(
-              item.user.invited_users, 
-              node, 
-              childPos, 
-              layerHeight, 
-              offset, 
-              siblingOffset
-          );
-          nodes.push(...invitedNodes);
+//       // If invited users exist, recursively create nodes for them
+//       if (item?.user?.invited_users && item?.user?.invited_users.length !== 0) {
+//           // Adjust x position so child nodes are centered under parent node
+//           const childPos = { x: tempX - node.width / 2, y: baseY + layerHeight };
+//           const invitedNodes = nodeBuilding(
+//               item.user.invited_users, 
+//               node, 
+//               childPos, 
+//               layerHeight, 
+//               offset, 
+//               siblingOffset
+//           );
+//           nodes.push(...invitedNodes);
           
-          // Adjust tempX to avoid overlap with child nodes
-          tempX = Math.max(tempX, invitedNodes[invitedNodes.length - 1].position.x + siblingOffset);
-      }
-  });
+//           // Adjust tempX to avoid overlap with child nodes
+//           tempX = Math.max(tempX, invitedNodes[invitedNodes.length - 1].position.x + siblingOffset);
+//       }
+//   });
 
-  // Add all child nodes to the overall nodes array
-  nodes.push(...childNodes);
+//   // Add all child nodes to the overall nodes array
+//   nodes.push(...childNodes);
 
-  return nodes;
+//   return nodes;
+// };
+const nodeBuilding = (data, prevData, pos, layerHeight = 100, siblingOffset = 50) => {
+    const nodes = prevData ? [prevData] : [];
+    
+    // Calculate the base Y position for child nodes
+    const baseY = pos.y + layerHeight; 
+
+    // Array to hold child nodes for the current level
+    const childNodes = [];
+
+    // Create nodes for the current level
+    data.forEach((item) => {
+        const name = `${item?.user?.last_name}, ${item?.user?.first_name} \n ${item?.user?.store_no}`;
+        
+        // Create node
+        const node = {
+            id: `${item?.user?.id}`,
+            position: { x: 0, y: baseY }, // Initial X position to be centered later
+            data: { label: name },
+            style: { backgroundColor: '#FF5722', color: 'white', border: '2px solid #FF9800' },
+            width: 150,
+            height: 42,
+        };
+        
+        // Push the node to child nodes
+        childNodes.push(node);
+    });
+
+    // Calculate the total width required for the current row
+    const totalWidth = childNodes.length * (childNodes[0].width + siblingOffset) - siblingOffset;
+    const startX = pos.x - totalWidth / 2; // Center child nodes under parent
+
+    // Assign X positions for each child node
+    childNodes.forEach((node, index) => {
+        node.position.x = startX + index * (node.width + siblingOffset); // Spread child nodes evenly
+    });
+
+    // Add current child nodes to the list of nodes
+    nodes.push(...childNodes);
+
+    // Recursively create nodes for invited users
+    childNodes.forEach((node, index) => {
+        if (data[index]?.user?.invited_users && data[index].user.invited_users.length !== 0) {
+            // Calculate position for the child nodes (next row)
+            const childPos = { x: node.position.x, y: baseY + layerHeight }; // Increase vertical spacing
+            const invitedNodes = nodeBuilding(
+                data[index].user.invited_users,
+                node,
+                childPos,
+                layerHeight,
+                siblingOffset // Use the same siblingOffset for consistency
+            );
+            nodes.push(...invitedNodes);
+        }
+    });
+
+    return nodes;
 };
+
 
 const edgeBuilding = (source, data, prevData = []) => {
   const edges = prevData ? [...prevData] : [];

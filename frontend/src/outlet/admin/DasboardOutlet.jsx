@@ -94,7 +94,7 @@ export default function DashboardOutlet() {
           </div>
 
           <div className='flex flex-wrap w-full gap-2'>
-            <div className='flex-1 h-full bg-trc p-5'>WEEKLY MEMBERS COMMISSION<div>{data?.weeklyDashboard?.members_commission}</div></div>
+            <div className='flex-1 h-full bg-trc p-5'>DAILY MEMBERS COMMISSION<div>{data?.weeklyDashboard?.members_commission}</div></div>
           </div>
         </div>
       </div>
