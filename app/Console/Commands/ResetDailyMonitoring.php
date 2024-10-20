@@ -34,11 +34,6 @@ class ResetDailyMonitoring extends Command
             return;
         }
 
-        $weeklyMonitoring->increment('package_sold', $monitoring->package_sold);
-        $weeklyMonitoring->increment('product_purchased', $monitoring->product_purchased);
-        $weeklyMonitoring->increment('company_revenue', $monitoring->company_revenue);
-        $weeklyMonitoring->increment('members_commission', $monitoring->members_commission);
-
         $monitoring->update([
             'package_sold' => 0,
             'product_purchased' => 0,

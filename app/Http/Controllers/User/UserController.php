@@ -619,11 +619,18 @@ class UserController extends Controller
         $user->inviteCode->increment('used_count');
         $counter = $user->inviteCode->used_count;
 
-        $weeklyDashboard = WeeklyDashboardMonitoring::where('id', 2)->first();
+        $dailyDashboard = WeeklyDashboardMonitoring::where('id', 2)->first();
+        $weeklyDashboard = WeeklyDashboardMonitoring::where('id', 1)->first();
+
         $weeklyDashboard->package_sold += 1;
         $weeklyDashboard->product_purchased += 500;
         $weeklyDashboard->company_revenue += 1500;
         $weeklyDashboard->save();
+
+        $dailyDashboard->package_sold += 1;
+        $dailyDashboard->product_purchased += 500;
+        $dailyDashboard->company_revenue += 1500;
+        $dailyDashboard->save();
 
         if($counter >= 2){
             $user->storeInfo->status = 1;
@@ -705,7 +712,7 @@ class UserController extends Controller
         foreach ($sequencesBefore as $sequence){
             if(!$specialIsOpen && $setting->level === $setting->level_counter){
 
-                if($sequence->userBefore->storeInfo->daily_points_timestamp->isSameDay(now())  && $sequence->userBefore->storeInfo->is_reached)
+                if($sequence->userBefore->storeInfo->daily_points_timestamp->isSameDay(now()) && $sequence->userBefore->storeInfo->is_reached)
                 {
                     //do nothing
                     // return response()->json(['message'=>'Daily 500 points received']);
@@ -713,14 +720,12 @@ class UserController extends Controller
                 {
                     $sequence->userBefore->storeInfo->points += 10;
                     $sequence->userBefore->storeInfo->points_today += 10;
-
                     $sequence->userBefore->storeInfo->daily_points_timestamp = now();
 
                     $sequence->userBefore->storeInfo->save();
 
                     if($sequence->userBefore->storeInfo->points_today >= 500 ){
                         $sequence->userBefore->storeInfo->is_reached = 1;
-                        $sequence->userBefore->storeInfo->points_today = 0;
                         $sequence->userBefore->storeInfo->save();
                     }
 
