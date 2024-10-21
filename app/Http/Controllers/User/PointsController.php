@@ -70,7 +70,7 @@ class PointsController extends Controller
         //
     }
 
-    public function redeemPoints(ReedemPointsRequest $reedemPointsRequest, User $userStore){
+    public function redeemPoints(ReedemPointsRequest $reedemPointsRequest){
 
         $request = $reedemPointsRequest->validated();
 
