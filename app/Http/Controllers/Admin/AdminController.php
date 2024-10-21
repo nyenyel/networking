@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Models\User\StoreInfo;
 use App\Models\User\Transaction;
+use App\Models\Wallet;
 use App\Models\WeeklyDashboardMonitoring;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -127,26 +128,28 @@ class AdminController extends Controller
             ->count() * 5000;
     }
 
-    public function approveRedeemRequest($id)
+    public function approveRedeemRequest(Request $request)
     {
-        DB::transaction(function () use($id) {
-            $redeemRequest = Transaction::findOrFail($id);
-            $weeklyrecord = WeeklyDashboardMonitoring::findOrFail(1);
-            $dailyRecord = WeeklyDashboardMonitoring::findOrFail(2);
-            $user = User::findOrFail($redeemRequest->user_id);
-            $store_info = $user->storeInfo;
-
+        $validated = $request->validate(['code' => 'required|exists:transactions,code']);
+        
+        $code = $validated['code'];
+        $redeemRequest = Transaction::where('code', $code)->first();
+        $weeklyrecord = WeeklyDashboardMonitoring::findOrFail(1);
+        $dailyRecord = WeeklyDashboardMonitoring::findOrFail(2);
+        $user = User::findOrFail($redeemRequest->user_id);
+        if($redeemRequest->status === 0){
             $redeemRequest->update([
                 'status'=>1
             ]);
-
-            $store_info->decrement('points', $redeemRequest->amount);
+    
             $weeklyrecord->decrement('members_commission', $redeemRequest->amount);
             $dailyRecord->decrement('members_commission', $redeemRequest->amount);
+    
+            return response()->json(['message'=>'successfully redeemed']);
+        } else {
+            return response()->json(['message'=>'Code Already Claimed'] ,400);
 
-        });
-
-        return response()->json(['message'=>'successfully redeemed']);
+        }
     }
 
     public function rejectRedeemRequest($id)
@@ -170,5 +173,26 @@ class AdminController extends Controller
         $setting->special_feature = !$setting->special_feature;
         $setting->save();
         return response()->json(['message' => 'updated']);
+    }
+
+    public function wallet(){
+        $user = Auth::user();
+        if($user->admin){
+            $unclaimed = Wallet::findOrFail(1)->first();
+            $weeklyCommision = WeeklyDashboardMonitoring::findOrFail(1)->first();
+            $transaction = Transaction::where('transaction_type', 1)
+                                        ->where('status', false)
+                                        ->get();
+            $transaction->load(['users']);
+            return response()->json([
+                'unclaimed' => $unclaimed->wallet,
+                'weekly' => $weeklyCommision->members_commission,
+                'transaction' => $transaction
+            ]);
+        } else {
+            return response()->json(['message'=> 'Unauthorized']);
+        }
+
+
     }
 }

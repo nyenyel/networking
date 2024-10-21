@@ -30,7 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/verify-email', [UserController::class, 'verifyEmail']);
     Route::post('/create-store', [UserController::class, 'createStore']);
     Route::post('/create-store-v2/{user}', [UserController::class, 'createStoreV2']);
-    Route::patch('/transaction-approve/{id}', [AdminController::class, 'approveRedeemRequest']);
+    Route::patch('/transaction-approve', [AdminController::class, 'approveRedeemRequest']);
+    Route::get('/wallet', [AdminController::class, 'wallet']);
 });
 
 //API for testing
