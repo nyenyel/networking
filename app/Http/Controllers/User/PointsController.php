@@ -105,7 +105,6 @@ class PointsController extends Controller
     
                 $toDeduct = $total;
                 
-
                 // Deduct points from the stores in sorted order
                 foreach ($sortedDataByPoints as $data) {
                     if ($toDeduct > $data->storeInfo->points) {
