@@ -78,27 +78,40 @@ class PointsController extends Controller
 
             DB::beginTransaction();
 
-            if (Carbon::now()->isSaturday()){
-            // if (true){
+            // if (Carbon::now()->isSaturday()){
+            if (true){
 
                 $user = Auth::user();
+                $storeInfo = $user->storeInfo;
 
-                // $user = User::where('id', 1)->first(); //for API testing
+                $stores = User::where('email', $user->email)->with('storeInfo')->get();
+                $sortedDataByPoints = $stores->sortBy(function ($store) {
+                    return $store->storeInfo->points;
+                });
 
-                $storeInfo = $userStore->storeInfo;
-                if($storeInfo->points < $request['amount']){
-                    return response()->json(['message' => 'insufficient Points '], 400);
+                $total = 0;
+                $toDeduct = $request['amount'];
+                foreach($sortedDataByPoints as $data){
+                    $total += $data->storeInfo->points;
+                }
+                if($total > $request['amount']){
+                    return response()->json(['message' => 'Insufficient Points.'], 400);
                 }
 
                 if ($storeInfo->last_redeemed && Carbon::parse($storeInfo->last_redeemed)->isSameWeek(now())) {
-                    DB::rollBack();
                     return response()->json(['message' => 'You can only redeem once a week.'], 400);
                 }
 
-                $storeInfo->points -= $request['amount'];
-                $storeInfo->last_redeemed = now();
-
-                $storeInfo->save();
+                foreach($sortedDataByPoints as $data){
+                    if($toDeduct > $data->storeInfo->points){
+                        $toDeduct -= $data->storeInfo->points;
+                        $data->storeInfo->points = 0;
+                        $data->storeInfo->save();
+                    } else {
+                        $data->storeInfo->points -= $toDeduct;
+                        $data->storeInfo->save();
+                    }
+                }
 
                 do {
                     $code = Str::random(10);
@@ -113,14 +126,6 @@ class PointsController extends Controller
                 ];
 
                 Transaction::create($transactionData);
-                // $transact = new Transaction();
-
-                // $transact->user_id = $user->id;
-                // $transact->transaction_type = 1;
-                // $transact->status = 1;
-                // $transact->amount = $request['amount'];
-
-                // $transact->save();
 
                 DB::commit();
 
