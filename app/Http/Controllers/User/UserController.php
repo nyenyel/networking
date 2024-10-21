@@ -713,6 +713,7 @@ class UserController extends Controller
             ->get();
 
         $dailyMonitoring = WeeklyDashboardMonitoring::where('id', 2)->first();
+        $weeklyMonitoring = WeeklyDashboardMonitoring::where('id', 1)->first();
         $setting = Setting::where('id', 1)->first();
 
         $specialIsOpen = $setting->special_feature;
@@ -747,6 +748,9 @@ class UserController extends Controller
                     $dailyMonitoring->members_commission += 10;
                     $dailyMonitoring->company_revenue -= 10;
                     $dailyMonitoring->save();
+                    $weeklyMonitoring->members_commission += 10;
+                    $weeklyMonitoring->company_revenue -= 10;
+                    $weeklyMonitoring->save();
                     $setting->level_counter = 1;
                     $setting->save();
                 }

@@ -37,6 +37,7 @@ class AdminController extends Controller
         $dailyCompanyRevenue = $this->getDailyCompanyRevenue();
         $weeklySales = $this->getWeeklySales();
         $weeklyDashboard = $this->weeklyDashboard();
+        $dailyDashboard = $this->dailyDashboard();
 
         // Logic to check pointing system status
         $isPointingSystemStopped = false;
@@ -61,6 +62,7 @@ class AdminController extends Controller
             'weeklySales' => $weeklySales,
             'isPointingSystemStopped' => $isPointingSystemStopped,
             'weeklyDashboard' => $weeklyDashboard,
+            'dailyDashboard' => $dailyDashboard,
         ];
 
         // Broadcast the updated dashboard data
@@ -130,6 +132,7 @@ class AdminController extends Controller
         DB::transaction(function () use($id) {
             $redeemRequest = Transaction::findOrFail($id);
             $weeklyrecord = WeeklyDashboardMonitoring::findOrFail(1);
+            $dailyRecord = WeeklyDashboardMonitoring::findOrFail(2);
             $user = User::findOrFail($redeemRequest->user_id);
             $store_info = $user->storeInfo;
 
@@ -139,6 +142,7 @@ class AdminController extends Controller
 
             $store_info->decrement('points', $redeemRequest->amount);
             $weeklyrecord->decrement('members_commission', $redeemRequest->amount);
+            $dailyRecord->decrement('members_commission', $redeemRequest->amount);
 
         });
 
@@ -154,6 +158,10 @@ class AdminController extends Controller
         return response()->json(['message'=>'request rejected']);
     }
     public function weeklyDashboard(){
+        return WeeklyDashboardMonitoring::where('id', 1)->first();
+    }
+
+    public function dailyDashboard(){
         return WeeklyDashboardMonitoring::where('id', 2)->first();
     }
 

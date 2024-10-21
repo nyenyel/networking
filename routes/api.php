@@ -30,6 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/verify-email', [UserController::class, 'verifyEmail']);
     Route::post('/create-store', [UserController::class, 'createStore']);
     Route::post('/create-store-v2/{user}', [UserController::class, 'createStoreV2']);
+    Route::patch('/transaction-approve/{id}', [AdminController::class, 'approveRedeemRequest']);
 });
 
 //API for testing
@@ -38,7 +39,6 @@ Route::middleware('auth:sanctum')->group(function () {
 // Route::get('/transaction', [TransactionController::class, 'transaction'])->middleware('auth:sanctum');
 // Route::get('user/genealogy/{id}', [UserController::class, 'getGenealogy']);
 // Route::get('/user/{id}/with-invites', [UserController::class, 'getUserWithInvites']);
-// Route::patch('/transaction-approve/{id}', [AdminController::class, 'approveRedeemRequest']);
 // Route::patch('/transaction-reject/{id}', [AdminController::class, 'rejectRedeemRequest']);
 
 Route::prefix('admin')->group(function () {
