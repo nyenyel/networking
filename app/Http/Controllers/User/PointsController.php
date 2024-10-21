@@ -73,52 +73,57 @@ class PointsController extends Controller
     public function redeemPoints(ReedemPointsRequest $reedemPointsRequest){
 
         $request = $reedemPointsRequest->validated();
-
+    
         try {
-
             DB::beginTransaction();
-
-            // if (Carbon::now()->isSaturday()){
-            if (true){
-
+    
+            if (true) {  // Disable the Saturday check for now
+    
                 $user = Auth::user();
                 $storeInfo = $user->storeInfo;
-
+    
+                // Fetch all stores and sort them by points in ascending order
                 $stores = User::where('email', $user->email)->with('storeInfo')->get();
                 $sortedDataByPoints = $stores->sortBy(function ($store) {
                     return $store->storeInfo->points;
                 });
-
-                $total = 0;
-                $toDeduct = $request['amount'];
-                foreach($sortedDataByPoints as $data){
-                    $total += $data->storeInfo->points;
-                }
-                return response()->json(['message' => $toDeduct], 400);
-
-                if($total > $request['amount']){
+    
+                // Calculate total points available across all stores
+                $total = $sortedDataByPoints->sum(function ($store) {
+                    return $store->storeInfo->points;
+                });
+    
+                // Check if total points are enough
+                if ($total < $request['amount']) {
                     return response()->json(['message' => 'Insufficient Points.'], 400);
                 }
-
+    
+                // Check if the last redemption was this week
                 if ($storeInfo->last_redeemed && Carbon::parse($storeInfo->last_redeemed)->isSameWeek(now())) {
                     return response()->json(['message' => 'You can only redeem once a week.'], 400);
                 }
-
-                foreach($sortedDataByPoints as $data){
-                    if($toDeduct > $data->storeInfo->points){
-                        $toDeduct = $toDeduct - $data->storeInfo->points;
-                        $data->storeInfo->points = 0;
+    
+                $toDeduct = $request['amount'];
+    
+                // Deduct points from the stores in sorted order
+                foreach ($sortedDataByPoints as $data) {
+                    if ($toDeduct > $data->storeInfo->points) {
+                        $toDeduct -= $data->storeInfo->points;
+                        $data->storeInfo->points = 0; // Set points to 0
                         $data->storeInfo->save();
                     } else {
-                        $data->storeInfo->points -= $toDeduct;
+                        $data->storeInfo->points -= $toDeduct; // Deduct the remaining amount
                         $data->storeInfo->save();
+                        break; // Exit loop once points are fully deducted
                     }
                 }
-
+    
+                // Generate a unique code for the transaction
                 do {
                     $code = Str::random(10);
                 } while (Transaction::where('code', $code)->exists());
-
+    
+                // Create the transaction
                 $transactionData = [
                     'user_id' => $user->id,
                     'transaction_type' => 1,
@@ -126,23 +131,22 @@ class PointsController extends Controller
                     'amount' => $request['amount'],
                     'code' => $code
                 ];
-
+    
                 Transaction::create($transactionData);
-
+    
                 DB::commit();
-
-                return response()->json(['success'=>'redeemed successfully']);
-
+    
+                return response()->json(['success' => 'Redeemed successfully']);
+    
             } else {
                 DB::rollBack();
-                return response()->json(['message'=>'Not Saturday']);
+                return response()->json(['message' => 'Not Saturday']);
             }
-
+    
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => $e], 500);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
-
     }
 
 }
