@@ -106,7 +106,7 @@ class PointsController extends Controller
 
                 foreach($sortedDataByPoints as $data){
                     if($toDeduct > $data->storeInfo->points){
-                        $toDeduct -= $data->storeInfo->points;
+                        $toDeduct = $toDeduct - $data->storeInfo->points;
                         $data->storeInfo->points = 0;
                         $data->storeInfo->save();
                     } else {
