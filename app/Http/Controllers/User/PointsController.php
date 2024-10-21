@@ -94,6 +94,8 @@ class PointsController extends Controller
                 foreach($sortedDataByPoints as $data){
                     $total += $data->storeInfo->points;
                 }
+                return response()->json(['message' => $toDeduct], 400);
+
                 if($total > $request['amount']){
                     return response()->json(['message' => 'Insufficient Points.'], 400);
                 }
