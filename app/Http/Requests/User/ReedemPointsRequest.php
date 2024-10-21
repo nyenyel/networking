@@ -22,7 +22,7 @@ class ReedemPointsRequest extends FormRequest
     public function rules()
     {
         return [
-            'amount' => 'required|integer|min:1|max:500',
+            'amount' => 'required|integer|min:1',
             // 'store_no' => 'required|exists:users,id'
         ];
     }
