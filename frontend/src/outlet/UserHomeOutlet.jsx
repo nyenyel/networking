@@ -26,7 +26,7 @@ export default function UserHomeOutlet() {
     const redeemPoints = async () => {
         try{
             setLoading(true)
-            const response = await apiClient.post(`api/redeem-points/${amount?.store_no}`, amount)
+            const response = await apiClient.post(`api/redeem-points`, amount)
             if(response.data.message){
                 setApiResponse(response.data.message)
             }
@@ -109,8 +109,6 @@ export default function UserHomeOutlet() {
                 {apiResponse && (
                     <div className="text-sm text-red-800 text-opacity-60">{apiResponse?.amount || apiResponse}</div>
                 )}
-                <label className="text-sm">Store</label>
-                <br />
                 <button type="submit" className="bg-trc mt-2 bg-prc rounded-md py-2 w-full text-white">Redeem</button>
             </form>
         </Box>
