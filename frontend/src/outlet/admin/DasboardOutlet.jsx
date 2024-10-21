@@ -84,17 +84,24 @@ export default function DashboardOutlet() {
             <div className='flex-1 bg-trc p-5'>NEW MEMBERS<div>{data?.newMembers}</div></div>
             <div className='flex-1 bg-trc p-5'>TOTAL MEMBERS<div>{data?.totalMembers}</div></div>
             <div className='flex-1 bg-trc p-5'>TOTAL DAILY SALE<div>{data?.dailyPackageSales}</div></div>
-            <div className='flex-1 bg-trc p-5'>DAILY PACKAGE SOLD<div>{data?.weeklyDashboard?.package_sold}</div></div>
+            <div className='flex-1 bg-trc p-5'>DAILY PACKAGE SOLD<div>{data?.dailyDashboard?.package_sold}</div></div>
           </div>
 
           <div className='flex flex-wrap w-full gap-2'>
-            <div className='flex-1 bg-trc p-5'>DAILY PRODUCT PURCHASED<div>{data?.weeklyDashboard?.product_purchased}</div></div>
-            <div className='flex-1 bg-trc p-5'>DAILY COMPANY REVENUE<div>{data?.weeklyDashboard?.company_revenue}</div></div>
+            <div className='flex-1 bg-trc p-5'>DAILY PRODUCT PURCHASED<div>{data?.dailyDashboard?.product_purchased}</div></div>
+            <div className='flex-1 bg-trc p-5'>DAILY COMPANY REVENUE<div>{data?.dailyDashboard?.company_revenue}</div></div>
             <div className='flex-1 bg-trc p-5'>NO. OF OPEN STORE<div>{data?.openStores}</div></div>
           </div>
 
           <div className='flex flex-wrap w-full gap-2'>
-            <div className='flex-1 h-full bg-trc p-5'>DAILY MEMBERS COMMISSION<div>{data?.weeklyDashboard?.members_commission}</div></div>
+            <div className='flex-1 h-full bg-trc p-5'>DAILY MEMBERS COMMISSION<div>{data?.dailyDashboard?.members_commission}</div></div>
+          </div>
+
+          <div className='flex flex-wrap w-full gap-2'>
+            <div className='flex-1 bg-trc p-5'>DAILY PACKAGE SOLD<div>{data?.weeklyDashboard?.package_sold}</div></div>
+            <div className='flex-1 bg-trc p-5'>DAILY PRODUCT PURCHASED<div>{data?.weeklyDashboard?.product_purchased}</div></div>
+            <div className='flex-1 bg-trc p-5'>DAILY COMPANY REVENUE<div>{data?.weeklyDashboard?.company_revenue}</div></div>
+            <div className='flex-1 bg-trc p-5'>DAILY MEMBERS COMMISSION<div>{data?.weeklyDashboard?.members_commission}</div></div>
           </div>
         </div>
       </div>

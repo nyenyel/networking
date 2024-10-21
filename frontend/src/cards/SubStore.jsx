@@ -3,6 +3,7 @@ import suki from '../assets/suki.png'
 
 
 export default function SubStore({data}) {
+    console.log(data)
     return (
         <>
         <div className={`flex flex-wrap font-sf gap-2 mb-2 p-4 drop-shadow rounded-md ${data?.store_info?.status === 0 ? 'bg-red-800 opacity-50' : data?.store_info?.status === 1 ? 'bg-white' : 'GRADUATED'}`}>
@@ -13,17 +14,16 @@ export default function SubStore({data}) {
             </div>
             </div>
             <div className='flex-1 flex flex-wrap text-center w-full md:w-auto'>
-                {/* <div className='flex-1 border-r-2 text-white w-full md:w-1/3' >
+                <div className='flex-1 border-r-2 text-white w-full md:w-1/3' >
                     <div className='bg-trc mx-4 rounded-md py-1'>
-                    AVG. DAILY POINTS
+                    INVITATION CODE
                     </div>
-                    <div className='text-text text-opacity-50 flex text-center py-4 text-5xl'>
+                <div className='text-text text-opacity-50 flex text-center py-4 text-5xl'>
                     <div className='flex-1'/>
-                    0 
-                    <div className='text-base ml-2'>pts</div>
+                    {data?.invite_code?.code}
                     <div className='flex-1'/>
                     </div>
-                </div> */}
+                </div>
                 <div className='flex-1 border-r-2 text-white w-full md:w-1/3' >
                     <div className='bg-trc mx-4 rounded-md py-1'>
                     CURRENT POINTS

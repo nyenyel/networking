@@ -111,25 +111,11 @@ export default function UserHomeOutlet() {
                 )}
                 <label className="text-sm">Store</label>
                 <br />
-                <select
-                    type="number"
-                    placeholder="Ex. 400"
-                    name="store_no"
-                    onChange={handleChange}
-                    className="w-full p-2 rounded-md border-def-t border-opacity-5 border-2"
-                >
-                    {subStore?.map((item,index) => (
-                        <option key={index} value={item.id}>Store Number: {item?.store_no}</option>
-                    ))}
-                </select>
-                {apiResponse && (
-                    <div className="text-sm text-red-800 text-opacity-60">{apiResponse?.store_no}</div>
-                )}
                 <button type="submit" className="bg-trc mt-2 bg-prc rounded-md py-2 w-full text-white">Redeem</button>
             </form>
         </Box>
     </Modal>
-    <div className='flex flex-col font-sf select-none text-text'>
+    <div className='flex flex-col font-sf  text-text'>
     <div className='flex flex-wrap mb-2 gap-2'>
         <div className='flex-none bg-white drop-shadow rounded-md w-full md:w-1/3'>
             <div className='bg-trc px-10 py-2 text-center text-white rounded-t-md'>

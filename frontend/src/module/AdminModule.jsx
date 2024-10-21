@@ -5,7 +5,7 @@ import SideBar from '../component/SideBar'
 export default function AdminModule() {
     const link = [
         'dashboard',
-        'management',
+        'wallet',
         'member',
         'compensation',
         'profile',

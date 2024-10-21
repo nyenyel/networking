@@ -12,6 +12,7 @@ import AdminModule from "../module/AdminModule";
 import DasboardOutlet from "../outlet/admin/DasboardOutlet";
 import MemberOutlet from "../outlet/admin/MemberOutlet";
 import Loading from "../component/Loading";
+import WalletOutlet from "../outlet/admin/WalletOutlet";
 
 export const router = createBrowserRouter([
     {
@@ -68,6 +69,11 @@ export const router = createBrowserRouter([
                     {
                         path: 'dashboard',
                         element: <DasboardOutlet />,
+                        errorElement: <ErrorPage />
+                    },
+                    {
+                        path: 'wallet',
+                        element: <WalletOutlet />,
                         errorElement: <ErrorPage />
                     },
                     {
