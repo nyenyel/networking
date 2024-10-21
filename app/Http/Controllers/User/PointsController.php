@@ -76,7 +76,7 @@ class PointsController extends Controller
     
         try {
             DB::beginTransaction();
-    
+            // if (Carbon::now()->isSaturday()){
             if (true) {  // Disable the Saturday check for now
     
                 $user = Auth::user();
@@ -103,8 +103,9 @@ class PointsController extends Controller
                     return response()->json(['message' => 'You can only redeem once a week.'], 400);
                 }
     
-                $toDeduct = $request['amount'];
-    
+                $toDeduct = $total;
+                
+
                 // Deduct points from the stores in sorted order
                 foreach ($sortedDataByPoints as $data) {
                     if ($toDeduct > $data->storeInfo->points) {
