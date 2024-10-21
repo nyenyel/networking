@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class PointsController extends Controller
 {
@@ -76,15 +77,15 @@ class PointsController extends Controller
     
         try {
             DB::beginTransaction();
-            // if (Carbon::now()->isSaturday()){
-            if (true) {  // Disable the Saturday check for now
+            if (Carbon::now()->isSaturday()){
+            // if (true) {  // Disable the Saturday check for now
     
                 $user = Auth::user();
                 $storeInfo = $user->storeInfo;
     
                 // Fetch all stores and sort them by points in ascending order
                 $stores = User::where('email', $user->email)->with('storeInfo')->get();
-                $sortedDataByPoints = $stores->sortBy(function ($store) {
+                $sortedDataByPoints = $stores->sortByDesc(function ($store) {
                     return $store->storeInfo->points;
                 });
     
@@ -103,10 +104,12 @@ class PointsController extends Controller
                     return response()->json(['message' => 'You can only redeem once a week.'], 400);
                 }
     
-                $toDeduct = $total;
+                $toDeduct = $request['amount'];
                 
                 // Deduct points from the stores in sorted order
                 foreach ($sortedDataByPoints as $data) {
+                    Log::info('To Deduct. = '.$toDeduct);
+                    Log::info('Store Point. = '.$data->storeInfo->points);
                     if ($toDeduct > $data->storeInfo->points) {
                         $toDeduct -= $data->storeInfo->points;
                         $data->storeInfo->points = 0; // Set points to 0
