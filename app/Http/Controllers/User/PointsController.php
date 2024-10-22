@@ -77,9 +77,12 @@ class PointsController extends Controller
     
         try {
             DB::beginTransaction();
-            if (Carbon::now()->isSaturday()){
+            if (Carbon::now()->isThursday() && Carbon::now()->hour >= 16){
             // if (true) {  // Disable the Saturday check for now
     
+                if (Carbon::now()->isFriday() && Carbon::now()->hour >= 7){
+                    return response()->json(['message' => 'You can only redeem today before 3:00 PM.'], 400);
+                }
                 $user = Auth::user();
                 $storeInfo = $user->storeInfo;
     
@@ -143,6 +146,7 @@ class PointsController extends Controller
     
             } else {
                 DB::rollBack();
+
                 return response()->json(['message' => 'Not Saturday']);
             }
     
