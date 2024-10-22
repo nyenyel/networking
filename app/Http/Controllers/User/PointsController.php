@@ -143,7 +143,7 @@ class PointsController extends Controller
     
             } else {
                 DB::rollBack();
-                return response()->json(['message' => 'Not Saturday']);
+                return response()->json(['message' => Carbon::now()]);
             }
     
         } catch (\Exception $e) {
