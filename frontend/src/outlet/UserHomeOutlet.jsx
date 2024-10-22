@@ -20,6 +20,7 @@ export default function UserHomeOutlet() {
     const [subStore, setSubStore] = useState()
     const [amount, setAmount] = useState()
     const [redeemablePoint, setReeemablePoints] = useState(0)
+    const [outOf, setOutOf] = useState(0)
     const [apiResponse, setApiResponse] = useState()
     const [modalIsOpen, setModalIsOpen] = useState(false)
     const handleModal = () => setModalIsOpen(!modalIsOpen)
@@ -68,6 +69,7 @@ export default function UserHomeOutlet() {
             const subRes = await apiClient.post('api/verify-email', {email: email})
             setSubStore(sortByStoreNo(subRes.data.users))
             setReeemablePoints(sumPoints(subRes.data.users))
+            setOutOf(sumOutOf(subRes.data.users))
             setStore(response.data)
             // console.log(response.data)
         } catch (e) {
@@ -186,7 +188,7 @@ export default function UserHomeOutlet() {
                 </div>
                 <div className='text-text text-opacity-50 flex text-center py-4 text-5xl'>
                     <div className='flex-1'/>
-                    {redeemablePoint} <div className='text-base ml-2'>pts</div>
+                    {redeemablePoint} / {outOf} <div className='text-base ml-2'>pts</div>
                     <div className='flex-1'/>
                 </div>
             </div>
@@ -214,5 +216,14 @@ const sortByStoreNo = (data) => {
 const sumPoints = (data) => {
     return data.reduce((total, store) => {
         return total + (store.store_info?.points || 0);
+    }, 0);
+}
+const sumOutOf = (data) => {
+    return data.reduce((total, store) => {
+        // Only add points if store_info exists and its status is 1
+        if (store.store_info?.status === 1) {
+            return total + 5000;
+        }
+        return total;
     }, 0);
 }

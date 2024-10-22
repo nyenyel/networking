@@ -3,7 +3,7 @@ import suki from '../assets/suki.png'
 
 
 export default function SubStore({data}) {
-    console.log(data)
+    // console.log(data)
     return (
         <>
         <div className={`flex flex-wrap font-sf gap-2 mb-2 p-4 drop-shadow rounded-md ${data?.store_info?.status === 0 ? 'bg-red-800 opacity-50' : data?.store_info?.status === 1 ? 'bg-white' : 'GRADUATED'}`}>
@@ -30,7 +30,7 @@ export default function SubStore({data}) {
                     </div>
                     <div className='text-text text-opacity-50 flex text-center py-4 text-5xl'>
                     <div className='flex-1'/>
-                    {data?.store_info?.points} 
+                    {data?.store_info?.points} / 5000
                     <div className='text-base ml-2'>pts</div>
                     <div className='flex-1'/>
                     </div>
@@ -41,7 +41,7 @@ export default function SubStore({data}) {
                     </div>
                     <div className='text-text text-opacity-50 flex text-center py-4 text-4xl'>
                     <div className='flex-1'/>
-                    {data?.store_info?.status === 0 ? 'CLOSE' : data?.store_info?.status === 1 ? 'OPEN' : 'GRADUATED'} 
+                    {data?.store_info?.status === 0 ? 'CLOSE' : data?.store_info?.status === 1 ? 'OPEN' : 'HAPPY NEW YEAR'} 
 
                     <div className='flex-1'/>
                     </div>

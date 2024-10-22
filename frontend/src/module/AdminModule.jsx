@@ -7,7 +7,6 @@ export default function AdminModule() {
         'dashboard',
         'wallet',
         'member',
-        'compensation',
         'profile',
         'financial',
         'transaction'
