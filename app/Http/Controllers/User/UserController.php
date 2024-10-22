@@ -728,6 +728,10 @@ class UserController extends Controller
             if (!$specialIsOpen && $setting->level === $setting->level_counter) {
                 if (($dailyPointsTimestamp->isSameDay(now()) && $storeInfo->is_reached) || $storeInfo->points_limit >= 5000) {
                     // Do nothing
+                    if($storeInfo->points_limit >= 5000){
+                        $storeInfo->status = 3;
+                        $storeInfo->save();
+                    }
                     Log::info("Bro got 500 points in a day or is graduated", ["date" => $dailyPointsTimestamp]);
                 } else {
                     $storeInfo->points += 10;
