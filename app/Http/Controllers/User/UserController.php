@@ -21,6 +21,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use  Illuminate\Support\Str;
 
@@ -729,11 +730,17 @@ class UserController extends Controller
             $dailyPointsTimestamp = Carbon::parse($storeInfo->daily_points_timestamp);
 
             if (!$specialIsOpen && $setting->level === $setting->level_counter) {
-                if ($dailyPointsTimestamp->isSameDay(now()) && $storeInfo->is_reached) {
+                if (($dailyPointsTimestamp->isSameDay(now()) && $storeInfo->is_reached) || $storeInfo->points_limit >= 5000) {
                     // Do nothing
+                    if($storeInfo->points_limit >= 5000){
+                        $storeInfo->status = 3;
+                        $storeInfo->save();
+                    }
+                    Log::info("Bro got 500 points in a day or is graduated", ["date" => $dailyPointsTimestamp]);
                 } else {
                     $storeInfo->points += 10;
                     $storeInfo->points_today += 10;
+                    $storeInfo->points_limit += 10;
                     $storeInfo->daily_points_timestamp = now();
                     $storeInfo->save();
 

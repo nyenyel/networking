@@ -44,8 +44,13 @@ class AdminController extends Controller
         $isPointingSystemStopped = false;
         $threshold = 0.5; // Threshold set to 90%
 
-        if ($dailyMembersCommission >= $threshold * $dailyCompanyRevenue) {
+        $setting = Setting::where('id', 1)->first();
+        if ($weeklyDashboard->members_commission >= $threshold * $weeklyDashboard->company_revenue) {
+            
             $isPointingSystemStopped = true;
+
+            $setting->special_feature = true;
+            $setting->save();
             // Optional: Logic to stop the pointing system
             // StoreInfo::update(['pointing_system_status' => 'stopped']);
         }
@@ -64,6 +69,7 @@ class AdminController extends Controller
             'isPointingSystemStopped' => $isPointingSystemStopped,
             'weeklyDashboard' => $weeklyDashboard,
             'dailyDashboard' => $dailyDashboard,
+            'switch' => $setting->special_feature
         ];
 
         // Broadcast the updated dashboard data
