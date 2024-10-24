@@ -580,6 +580,10 @@ class UserController extends Controller
                     return response()->json(['message'=>'Daily limit reached']);
                 }
 
+                if($firstOpenedStore->status = 3){
+                    return response()->json(['message'=>'Account limit reached']);
+                }
+
                 $firstOpenedStore->points += 10;
                 $firstOpenedStore->points_limit += 10;
                 $firstOpenedStore->points_today += 10;
